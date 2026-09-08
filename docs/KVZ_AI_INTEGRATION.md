@@ -23,18 +23,19 @@ kvz-ai**, а платформа маршрутизирует её в конне�
 Чтение (список изделий, параметры, проверки, спецификация) идёт свободно; **любое изменение/экспорт —
 за approval-gate и по роли** (как write-операции у bitrix).
 
-## Топология (важно решить)
+## Фазность (решено)
+- **Фаза 1 — сейчас, напрямую через Claude app (Claude Desktop).** MCP-клиент = Claude Desktop на
+  цеховой Windows-машине, подключается к нашему `Bimwright.Ipt.Server.exe` по stdio. Без kvz-ai.
+  Профиль по умолчанию — read-only; для правок/создания изделий — edit-профиль осознанно.
+- **Фаза 2 — через kvz-ai, топология B** (worker отдельно на Linux/облаке, Inventor на цеховой машине).
+
+## Топология Фазы 2 — Вариант B (выбран)
 Наш .NET-сервер + add-in обязаны жить **на Windows-машине с Inventor** (add-in внутри Inventor,
-связь local pipe). Вопрос — где живёт worker kvz-ai:
-
-- **Вариант A — worker на той же Windows-машине с Inventor.**
-  Коннектор kvz-ai запускает `Bimwright.Ipt.Server.exe` по stdio напрямую (как cad-activity запускает
-  свой `dist/server.js`). Проще всего, ничего по сети. Рекомендую для пилота.
-
-- **Вариант B — worker отдельно (Linux/cloud), Inventor на цеховой машине.**
-  Тогда на Windows-машине поднимается сетевой шлюз (HTTP, bearer-токен, egress только к ней), а
-  коннектор `connectors/inventor/` (TS, паттерн cad-activity) ходит в этот шлюз. Нужен доп. слой —
-  сетевой мост поверх stdio-сервера.
+local pipe). Worker kvz-ai — отдельно (Linux/облако), поэтому:
+- На Windows поднимается **сетевой шлюз** (HTTP, bearer-токен, egress только к этой машине) поверх
+  stdio-сервера — потому что базовый сервер общается только локально.
+- Коннектор `connectors/inventor/` (TS, паттерн cad-activity) ходит в этот шлюз.
+- (Вариант A — worker на самой Windows-машине, коннектор spawn'ит Server.exe по stdio — не наш случай.)
 
 ## Что нужно добавить в kvz-ai (следующий шаг)
 Коннектор `connectors/inventor/` в стиле `cad-activity`:

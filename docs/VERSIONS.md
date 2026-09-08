@@ -36,6 +36,13 @@ Inventor, связь Named Pipe (2025–2027) / TCP (2022–2024), команд�
 `batch_flat_dxf`, `bom_report`. Соответствие тул↔wire — `overlay/AGENTS.md`.
 
 ## Changelog
+### v0.1.2 — 2026-09-08
+- Создание изделий: `inventor_vent_new_product` (server-side клон папки-шаблона) +
+  `inventor_vent_save_part_as` (wire, SaveAs детали). Toolset `vent` теперь 9 тулзов.
+- Зафиксирована фазность: Фаза 1 — напрямую через Claude Desktop; Фаза 2 — kvz-ai, топология B
+  (worker отдельно, сетевой шлюз на Windows + TS-коннектор `connectors/inventor/`).
+- Каveat клона сборки с абсолютными ссылками (Pack-and-Go) — доводится вживую на Windows.
+
 ### v0.1.1 — 2026-09-08
 - Профиль **read-only по умолчанию** в примере конфига + отдельный edit-профиль.
 - `setup.ps1`: `CatalogRoot` обязателен, запрет корня диска.

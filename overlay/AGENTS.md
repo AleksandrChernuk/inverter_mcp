@@ -16,6 +16,8 @@ C#-исходники нашего toolset `vent`. Копируются в фо�
 | Тул | Wire | Мутирует? |
 |---|---|---|
 | `inventor_vent_list_products` | (нет, server-side) | нет |
+| `inventor_vent_new_product` | (нет, server-side — копия папки-шаблона) | да (создаёт файлы) |
+| `inventor_vent_save_part_as` | `vent_save_part_as` | да (создаёт файл) |
 | `inventor_vent_open_product` | `vent_open_product` | да |
 | `inventor_vent_set_casing_discharge` | `vent_set_discharge` | да |
 | `inventor_vent_check_part` | `vent_check_part` | нет |

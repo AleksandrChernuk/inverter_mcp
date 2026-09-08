@@ -15,6 +15,7 @@ public static partial class InventorCommandRegistry
     static partial void AddVent(Dictionary<string, IInventorCommand> d, Action<IInventorCommand> add)
     {
         add(new OpenProductHandler());
+        add(new SavePartAsHandler());
         add(new SetDischargeHandler());
         add(new CheckPartHandler());
         add(new MakeDrawingHandler());

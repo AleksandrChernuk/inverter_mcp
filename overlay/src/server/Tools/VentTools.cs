@@ -82,6 +82,67 @@ public sealed class VentTools
         }
     }
 
+    [McpServerTool(Name = "inventor_vent_new_product"),
+     Description("Create a NEW product (изделие) by cloning an existing template product FOLDER to a new " +
+                 "folder under the catalog. Copies every file (assembly + parts + drawings) so relative " +
+                 "references stay intact. Args: template_dir (absolute path of the product to clone), " +
+                 "new_name (folder name for the copy). Optional dest_root (defaults to the template's parent). " +
+                 "Returns the new folder and its top .iam. Server-side (no Inventor). AFTER cloning, open the " +
+                 "new top assembly and set the size parameters, then regenerate DXF.\n" +
+                 "CAVEAT: if the template assembly stores ABSOLUTE part references, the copy will still point " +
+                 "at the originals — such families need Inventor Pack-and-Go (see vent_save_part_as / docs).")]
+    public string NewProduct(string templateDir, string newName, string? destRoot = null)
+    {
+        if (string.IsNullOrWhiteSpace(templateDir) || !Directory.Exists(templateDir))
+            return Err("INVALID_ARGUMENT", "template_dir not found: " + templateDir);
+        if (string.IsNullOrWhiteSpace(newName) || newName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+            return Err("INVALID_ARGUMENT", "new_name is empty or has invalid characters");
+
+        var parent = string.IsNullOrWhiteSpace(destRoot) ? Path.GetDirectoryName(templateDir.TrimEnd('\\', '/')) : destRoot;
+        if (string.IsNullOrWhiteSpace(parent) || !Directory.Exists(parent))
+            return Err("INVALID_ARGUMENT", "dest_root not found: " + parent);
+
+        var dest = Path.Combine(parent!, newName);
+        if (Directory.Exists(dest))
+            return Err("INVALID_ARGUMENT", "destination already exists: " + dest);
+
+        try
+        {
+            CopyDir(templateDir, dest);
+        }
+        catch (Exception ex)
+        {
+            return Err("API_ERROR", "copy failed: " + ex.Message);
+        }
+
+        var topIam = Directory.GetFiles(dest, "*.iam", SearchOption.TopDirectoryOnly);
+        return JsonConvert.SerializeObject(new
+        {
+            ok = true,
+            product_dir = dest,
+            top_assembly = topIam.Length > 0 ? topIam[0] : null,
+            parts = Directory.GetFiles(dest, "*.ipt", SearchOption.TopDirectoryOnly).Length,
+            note = "Откройте top_assembly, задайте параметры, перегенерируйте DXF. Проверьте, что ссылки указывают на копии, а не на шаблон.",
+        }, Formatting.Indented);
+    }
+
+    private static void CopyDir(string src, string dst)
+    {
+        Directory.CreateDirectory(dst);
+        foreach (var f in Directory.GetFiles(src)) File.Copy(f, Path.Combine(dst, Path.GetFileName(f)), false);
+        foreach (var d in Directory.GetDirectories(src)) CopyDir(d, Path.Combine(dst, Path.GetFileName(d)));
+    }
+
+    private static string Err(string code, string message)
+        => JsonConvert.SerializeObject(new { ok = false, error = new { code, message } }, Formatting.Indented);
+
+    [McpServerTool(Name = "inventor_vent_save_part_as"),
+     Description("Save the ACTIVE part document as a NEW .ipt at output_path (derive a new part from the " +
+                 "current one). output_path must be an absolute path under an allowed output root. Use for " +
+                 "single-part derivations; for whole assemblies use vent_new_product (folder clone) or Pack-and-Go.")]
+    public Task<string> SavePartAs(string outputPath, CancellationToken ct = default)
+        => Call("vent_save_part_as", new JObject { ["output_path"] = outputPath }, ct);
+
     [McpServerTool(Name = "inventor_vent_open_product"),
      Description("Open a product's top assembly (.iam) or a specific part (.ipt) in Inventor by absolute " +
                  "path (get paths from inventor_vent_list_products). Makes it the active document so the " +
