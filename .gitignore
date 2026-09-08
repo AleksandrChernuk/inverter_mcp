@@ -1,0 +1,16 @@
+# forks & builds
+_forks/
+**/bin/
+**/obj/
+
+# python
+venv/
+__pycache__/
+*.pyc
+
+# outputs
+*.spec.csv
+DXF_OUT/
+
+# os
+.DS_Store

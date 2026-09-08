@@ -1,0 +1,19 @@
+{
+  "//": "Пример конфига MCP-клиента (Claude Desktop / Claude Code) для ultra-MCP вентзавода.",
+  "//paths": "Замените путь на реальный Bimwright.Ipt.Server.exe после сборки setup.ps1.",
+  "mcpServers": {
+    "vent-inventor": {
+      "command": "C:\\inverter_mcp\\_forks\\ipt-mcp\\src\\server\\bin\\Release\\net8.0\\Bimwright.Ipt.Server.exe",
+      "args": [
+        "--toolsets", "meta,query,document,parameters,feature,export,assembly,assembly_query,vent",
+        "--timeout-ms", "60000"
+      ],
+      "env": {
+        "VENT_CATALOG_ROOT": "D:\\Catalog",
+        "BIMWRIGHT_INVENTOR_EXPORT_ROOT": "D:\\DXF_OUT"
+      }
+    }
+  },
+  "//readonly": "Для безопасного режима добавьте \"--read-only\" в args — тогда мутирующие тулзы (set_discharge, make_gabarit, batch_flat_dxf) будут скрыты.",
+  "//target": "Если открыто несколько Inventor, выбирайте инстанс тулзой inventor_switch_target по 4-значному году."
+}
