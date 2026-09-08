@@ -17,10 +17,15 @@ param(
     [string] $RepoUrl      = "https://github.com/bimwright/ipt-mcp.git",
     [string] $RepoDir      = "$PSScriptRoot\..\..\_forks\ipt-mcp",
     [string] $OverlayDir   = "$PSScriptRoot\..\..\overlay",
-    [string] $CatalogRoot  = "",     # напр. D:\Catalog  -> станет VENT_CATALOG_ROOT
-    [string] $ExportRoot   = "",     # напр. D:\DXF_OUT  -> разрешённая папка вывода
+    [Parameter(Mandatory=$true)]
+    [string] $CatalogRoot,            # напр. D:\Catalog  -> станет VENT_CATALOG_ROOT (обязателен)
+    [string] $ExportRoot   = "",      # напр. D:\DXF_OUT  -> разрешённая папка вывода
     [switch] $Install
 )
+
+# Защита: не разрешаем корень диска как каталог (слишком широкая видимость).
+if ($CatalogRoot -match '^[A-Za-z]:\\?$') { throw "CatalogRoot не должен быть корнем диска ($CatalogRoot). Укажите конкретную папку каталога изделий." }
+if (-not (Test-Path $CatalogRoot)) { throw "CatalogRoot не существует: $CatalogRoot" }
 
 $ErrorActionPreference = "Stop"
 function Info($m) { Write-Host "[setup] $m" -ForegroundColor Cyan }

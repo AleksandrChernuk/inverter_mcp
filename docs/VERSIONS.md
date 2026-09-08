@@ -36,6 +36,12 @@ Inventor, связь Named Pipe (2025–2027) / TCP (2022–2024), команд�
 `batch_flat_dxf`, `bom_report`. Соответствие тул↔wire — `overlay/AGENTS.md`.
 
 ## Changelog
+### v0.1.1 — 2026-09-08
+- Профиль **read-only по умолчанию** в примере конфига + отдельный edit-профиль.
+- `setup.ps1`: `CatalogRoot` обязателен, запрет корня диска.
+- Добавлен `docs/KVZ_AI_INTEGRATION.md` (подключение как коннектор kvz-ai, роли, approval-gate, топология).
+- Цель Inventor зафиксирована: **2026** (.NET 8, Named Pipe, plugin-inv26).
+
 ### v0.1.0 — 2026-09-08
 - Выбрана база ipt-mcp; зафиксирован commit.
 - `dxf_tools`: `analyze.py`, `batch.py`, `compare.py` — проверено на 250 реальных DXF
