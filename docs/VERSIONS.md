@@ -35,7 +35,24 @@ Inventor, связь Named Pipe (2025–2027) / TCP (2022–2024), команд�
 `list_products`, `open_product`, `set_casing_discharge`, `check_part`, `make_gabarit`,
 `batch_flat_dxf`, `bom_report`. Соответствие тул↔wire — `overlay/AGENTS.md`.
 
+## Зафиксированные версии зависимостей (точные пины, без ^/>=)
+- Python: `ezdxf==1.4.4`, `openpyxl==3.1.5` (`dxf_tools/requirements.txt`).
+- Node/TS: `@modelcontextprotocol/sdk 1.12.0`, `zod 3.23.8`, `typescript 5.6.3`, `tsx 4.19.2`,
+  `@types/node 22.10.2` (`phase2/*/package.json`). Выбраны стабильные версии, не bleeding-edge.
+- CI: Python 3.12, Node 20 (`.github/workflows/ci.yml`).
+
+## CI (GitHub Actions)
+`.github/workflows/ci.yml` — держим зелёным и минимальным:
+- `dxf-tools` — ставит пиненые зависимости, гоняет `dxf_tools/selftest.py` (генерит DXF в памяти,
+  проверяет analyze + spec_xlsx, без внешних файлов).
+- `gateway-syntax` — `node --check` шлюза.
+C#/Inventor-часть в CI не собирается (компилируется только в форке ipt-mcp на Windows).
+
 ## Changelog
+### v0.1.5 — 2026-09-08
+- Все зависимости запинены точными версиями (убраны `^`/`>=`).
+- Добавлен чистый CI (GitHub Actions): Python selftest + gateway syntax. `node_modules/`, `dist/` в .gitignore.
+
 ### v0.1.4 — 2026-09-08
 - `dxf_tools/spec_xlsx.py` + `materials.json` — XLSX-спецификация по правилам учёта металла КВЗ.
   Проверено на реальном `ВКР №7,1/Специфікація.xlsx`: итог массы 101.66 кг воспроизведён точно,

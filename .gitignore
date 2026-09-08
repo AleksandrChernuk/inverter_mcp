@@ -3,6 +3,10 @@ _forks/
 **/bin/
 **/obj/
 
+# node
+node_modules/
+dist/
+
 # python
 venv/
 __pycache__/
