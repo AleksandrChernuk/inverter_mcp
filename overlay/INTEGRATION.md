@@ -49,10 +49,13 @@ AddVent(d, Add);          // vent-factory toolset
 static partial void AddVent(Dictionary<string, IInventorCommand> d, Action<IInventorCommand> add);
 ```
 
-## 3. Собрать и проверить
+## 3. Собрать и проверить (Inventor 2026 → .NET 8)
+Не собирайте всё решение `IptMcp.sln` целиком — в нём есть `plugin-inv27` на .NET 10.
+На машине с одним .NET 8 SDK стройте только нужное:
 ```powershell
-dotnet build src/IptMcp.sln -c Release
-dotnet test  src/IptMcp.sln           # тесты базы должны остаться зелёными
+dotnet build src/server/Bimwright.Ipt.Server.csproj -c Release
+dotnet build src/plugin-inv26/Bimwright.Ipt.Plugin.Inv26.csproj -c Release
+dotnet test  tests/Bimwright.Ipt.Tests/Bimwright.Ipt.Tests.csproj   # Inventor-free, должны быть зелёными
 ```
 `inventor_vent_*` появятся в `tools/list` (проверьте `RegistrationCountTests` — счётчик тулзов вырастет,
 поправьте ожидаемое число или исключите `vent` из этого теста).
