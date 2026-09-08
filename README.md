@@ -15,6 +15,8 @@
 python3 -m venv venv && ./venv/bin/pip install -r dxf_tools/requirements.txt
 ./venv/bin/python dxf_tools/analyze.py "путь/к/детали.dxf"      # одна деталь → JSON
 ./venv/bin/python dxf_tools/batch.py "путь/к/каталогу"           # весь каталог → spec.csv
+./venv/bin/python dxf_tools/compare.py ЭТАЛОН.dxf НОВЫЙ.dxf      # регрессия .ipt→DXF ↔ эталон
+./venv/bin/python dxf_tools/spec_xlsx.py --from-dxf "каталог" -o Спецификация.xlsx  # спец. по учёту металла
 ```
 
 Извлекает: материал, толщину, кол-во, обозначение, габарит, площадь, длину реза,

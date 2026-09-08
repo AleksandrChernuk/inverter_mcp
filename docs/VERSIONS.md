@@ -36,6 +36,11 @@ Inventor, связь Named Pipe (2025–2027) / TCP (2022–2024), команд�
 `batch_flat_dxf`, `bom_report`. Соответствие тул↔wire — `overlay/AGENTS.md`.
 
 ## Changelog
+### v0.1.4 — 2026-09-08
+- `dxf_tools/spec_xlsx.py` + `materials.json` — XLSX-спецификация по правилам учёта металла КВЗ.
+  Проверено на реальном `ВКР №7,1/Специфікація.xlsx`: итог массы 101.66 кг воспроизведён точно,
+  +1% сварочной проволоки, коды склада (`/*NNNNNN`) подставляются. `openpyxl>=3.1` в requirements.
+
 ### v0.1.3 — 2026-09-08
 - Фаза 2 (скелеты): `phase2/gateway/` (Node HTTP поверх stdio-MCP) + `phase2/connectors-inventor/`
   (TS MCP-коннектор для kvz-ai, read/write-гейтинг). Шлюз прошёл `node --check`.
