@@ -1,0 +1,16 @@
+{
+  "name": "vent-inventor-gateway",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "HTTP gateway over the .NET Inventor MCP stdio server — exposes vent tools to kvz-ai over the network (Windows, Inventor 2026).",
+  "bin": { "vent-gateway": "src/server.mjs" },
+  "scripts": {
+    "start": "node src/server.mjs",
+    "check": "node --check src/server.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "engines": { "node": ">=20" }
+}

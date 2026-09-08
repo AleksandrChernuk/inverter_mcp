@@ -36,6 +36,14 @@ Inventor, связь Named Pipe (2025–2027) / TCP (2022–2024), команд�
 `batch_flat_dxf`, `bom_report`. Соответствие тул↔wire — `overlay/AGENTS.md`.
 
 ## Changelog
+### v0.1.3 — 2026-09-08
+- Фаза 2 (скелеты): `phase2/gateway/` (Node HTTP поверх stdio-MCP) + `phase2/connectors-inventor/`
+  (TS MCP-коннектор для kvz-ai, read/write-гейтинг). Шлюз прошёл `node --check`.
+- `docs/WORKFLOW.md` — реальный маршрут конструктора (ВКР 7,1 ← ВКР 6,3, Pack-and-Go) → тулзы.
+- Вывод из реальной папки ВКР №7,1: есть `.ipj` → клон папки рабочий (относительные ссылки),
+  надо активировать новый `.ipj`. Кодировка `ВКР 7,1 УЗ.ДЕ.ПОЗ`. Новые тулзы в TODO
+  (recode_product, check_product, batch_pdf, XLSX-спецификация).
+
 ### v0.1.2 — 2026-09-08
 - Создание изделий: `inventor_vent_new_product` (server-side клон папки-шаблона) +
   `inventor_vent_save_part_as` (wire, SaveAs детали). Toolset `vent` теперь 9 тулзов.

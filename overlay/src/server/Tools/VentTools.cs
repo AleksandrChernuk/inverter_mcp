@@ -122,7 +122,9 @@ public sealed class VentTools
             product_dir = dest,
             top_assembly = topIam.Length > 0 ? topIam[0] : null,
             parts = Directory.GetFiles(dest, "*.ipt", SearchOption.TopDirectoryOnly).Length,
-            note = "Откройте top_assembly, задайте параметры, перегенерируйте DXF. Проверьте, что ссылки указывают на копии, а не на шаблон.",
+            note = "Откройте top_assembly, задайте параметры, перегенерируйте DXF. ВАЖНО: если в папке есть .ipj — " +
+                   "активируйте НОВЫЙ .ipj в Inventor (Pack-and-Go делает ссылки относительными проекту), иначе " +
+                   "ссылки укажут на шаблон. Для семейств с абсолютными ссылками используйте полноценный Pack-and-Go.",
         }, Formatting.Indented);
     }
 

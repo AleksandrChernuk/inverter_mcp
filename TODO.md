@@ -26,12 +26,22 @@
 - [ ] Клон сборки: проверить тип ссылок; если абсолютные — реализовать Pack-and-Go в `vent_new_product`.
 - [ ] Поправить `RegistrationCountTests` базы под +9 тулзов `vent`.
 
+## ▶ Тулзы под реальный маршрут конструктора (см. docs/WORKFLOW.md)
+- [ ] `vent_recode_product` — переименование файлов по кодировке + `Set iProperty` designation.
+- [ ] `vent_new_product` — доработать: копировать/активировать `.ipj`; при абс. ссылках — Pack-and-Go (ReferenceManager).
+- [ ] `vent_check_product` — проверки: отверстия под двигатель, зазоры, соответствие спецификации, коды/папки.
+- [ ] `vent_batch_pdf` — пакетный экспорт чертежей (.idw) в PDF по кодировке.
+- [ ] `vent_batch_flat_dxf` — именование DXF по коду детали (иерархия для лазера).
+- [ ] XLSX-спецификация по правилам учёта металла (шаблон из `ВКР №7,1/Специфікація.xlsx`), поверх bom_report/dxf_tools.
+- [ ] Чертежи-деталировка — поэтапно от габаритки (длинный roadmap).
+
 ## ▶ Фаза 2 — интеграция с kvz-ai (топология B)
-- [ ] HTTP-шлюз на Windows поверх stdio-сервера (bearer-токен, egress только к машине).
-- [ ] Коннектор `connectors/inventor/` в kvz-ai (TS + @modelcontextprotocol/sdk, паттерн cad-activity):
-      read-only по умолчанию, write-тулзы за ролью + approval-gate, аудит, zod-схемы.
-- [ ] Регистрация в реестре коннекторов/tools kvz-ai + role-gating.
-- [ ] Сквозной тест: чат kvz-ai → очередь → worker → шлюз → Inventor → ответ.
+- [x] HTTP-шлюз (скелет) — `phase2/gateway/` (Node, MCP-client→Server.exe, bearer, allowlist).
+- [x] Коннектор (скелет) — `phase2/connectors-inventor/` (TS MCP-сервер, read/write-гейтинг).
+- [ ] Доводка шлюза: авто-reconnect Server.exe, rate-limit, аудит-лог, привязка к LAN/VPN + файрвол.
+- [ ] Доводка коннектора: zod-валидация ответов, аудит, тесты (vitest), секреты из 1Password.
+- [ ] Скопировать коннектор в `kvz-ai/connectors/inventor/`, зарегистрировать в реестре + role-gating.
+- [ ] Сквозной тест: чат kvz-ai → очередь → worker → коннектор → шлюз → Inventor → ответ.
 
 ## ▶ Доработки dxf_tools (можно на Mac в любой момент)
 - [ ] Сшивка контуров из LINE/ARC в замкнутые петли (убрать ложные OPEN_CONTOUR).
