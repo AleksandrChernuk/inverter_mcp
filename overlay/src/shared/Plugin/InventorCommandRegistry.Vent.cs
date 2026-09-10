@@ -25,6 +25,7 @@ public static partial class InventorCommandRegistry
         add(new DriveDimensionHandler());
         add(new SetComponentParameterHandler());
         add(new SetConstraintHandler());
+        add(new SketchGeometryHandler());
     }
 }
 #endif

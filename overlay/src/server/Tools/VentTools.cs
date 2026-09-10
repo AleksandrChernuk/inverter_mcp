@@ -256,6 +256,15 @@ public sealed class VentTools
         CancellationToken ct = default)
         => Call("vent_set_constraint", new JObject { ["name"] = name, ["value"] = value }, ct);
 
+    [McpServerTool(Name = "inventor_vent_inspect_sketch"),
+     Description("Look INSIDE one sketch of the active part: points, lines, arcs, circles (coords in mm + radial " +
+                 "distance from the sketch origin) and geometric-constraint counts by type. Use to judge whether a " +
+                 "driving dimension can be added (needs a free DOF + a target). Pass sketch=name (from inventor_vent_inspect_model). Read-only.")]
+    public Task<string> InspectSketch(
+        [Description("Sketch name, e.g. \"Эскиз3\" from inventor_vent_inspect_model.")] string sketch,
+        CancellationToken ct = default)
+        => Call("vent_inspect_sketch", new JObject { ["sketch"] = sketch }, ct);
+
     // ---- helper (mirrors ExportTools.Call) ----
     private async Task<string> Call(string command, JObject p, CancellationToken ct)
     {
