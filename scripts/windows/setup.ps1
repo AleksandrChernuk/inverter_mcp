@@ -20,6 +20,7 @@ param(
     [Parameter(Mandatory=$true)]
     [string] $CatalogRoot,            # напр. D:\Catalog  -> станет VENT_CATALOG_ROOT (обязателен)
     [string] $ExportRoot   = "",      # напр. D:\DXF_OUT  -> разрешённая папка вывода
+    [string] $ReleasePython = "",     # напр. C:\Python312\python.exe; включает deep DXF/XLSX release worker
     [switch] $Install
 )
 
@@ -77,6 +78,16 @@ if ($Install) {
 # 5. Переменные окружения (для текущего пользователя)
 if ($CatalogRoot) { [Environment]::SetEnvironmentVariable("VENT_CATALOG_ROOT", $CatalogRoot, "User"); Info "VENT_CATALOG_ROOT=$CatalogRoot" }
 if ($ExportRoot)  { [Environment]::SetEnvironmentVariable("BIMWRIGHT_INVENTOR_EXPORT_ROOT", $ExportRoot, "User"); Info "EXPORT_ROOT=$ExportRoot" }
+if ($ReleasePython) {
+    if (-not (Test-Path $ReleasePython)) { throw "ReleasePython не найден: $ReleasePython" }
+    $releaseScript = (Resolve-Path "$PSScriptRoot\..\..\dxf_tools\release.py").Path
+    [Environment]::SetEnvironmentVariable("RELEASE_PYTHON", $ReleasePython, "User")
+    [Environment]::SetEnvironmentVariable("RELEASE_SCRIPT", $releaseScript, "User")
+    Info "Проверяю offline release worker"
+    & $ReleasePython "$PSScriptRoot\..\..\dxf_tools\selftest.py"
+    if ($LASTEXITCODE -ne 0) { throw "dxf_tools selftest завершился с кодом $LASTEXITCODE" }
+    Info "RELEASE_SCRIPT=$releaseScript"
+}
 
 Info "Готово. Сервер: $RepoDir\src\server\bin\Release\...\Bimwright.Ipt.Server.exe"
 Info "Дальше пропишите этот путь в конфиг MCP-клиента (см. scripts\windows\claude_mcp_config.example.json)."

@@ -57,5 +57,36 @@ dotnet build src/server/Bimwright.Ipt.Server.csproj -c Release
 dotnet build src/plugin-inv26/Bimwright.Ipt.Plugin.Inv26.csproj -c Release
 dotnet test  tests/Bimwright.Ipt.Tests/Bimwright.Ipt.Tests.csproj   # Inventor-free, должны быть зелёными
 ```
-`inventor_vent_*` появятся в `tools/list` (проверьте `RegistrationCountTests` — счётчик тулзов вырастет,
+`inventor_vent_*` появятся в `tools/list` (19 тулзов в текущем overlay; проверьте
+`RegistrationCountTests` — счётчик тулзов вырастет,
 поправьте ожидаемое число или исключите `vent` из этого теста).
+
+Для автономного smoke-test сначала вызовите `inventor_vent_execute_plan` с `dryRun=true`, затем на
+копии модели — с `dryRun=false`, заведомо failing `physical_bounds` и убедитесь, что ответ содержит
+`rolled_back=true`, `snapshot_restore.pass=true`, а выражения параметров и материалы активного документа
+и вложенных occurrences восстановились. `Transaction` Inventor относится к одному `Document`, поэтому
+executor дополнительно снимает bounded snapshot driving-параметров/материалов дерева ссылок и явно
+восстанавливает его после abort. Только после passing checks отдельно вызывайте
+`inventor_vent_save_product(productRoot=...)`; `execute_plan` намеренно не пишет файл на диск.
+`save_product` вызывает `Document.Save2` с точным списком dirty dependencies и блокирует любую dirty
+ссылку вне product root — обычного `Document.Save()` для сборки здесь недостаточно.
+Product Job v2 может передать до 256 recipe bindings; executor принимает до 64 checks
+(до 32 общих + до 32 mounting-pattern checks).
+
+Для `inventor_vent_clone_recode_product` сначала выполните `dryRun=true` и сохраните file map в журнале.
+Windows acceptance должен подтвердить: copied `.iam/.idw` ссылаются только на destination tree, shared
+Content Center ссылки остались внешними, исходный шаблон не сохранён/не изменён, `INCOMPLETE.json` отсутствует.
+Команда отказывает, если исходный document уже открыт с unsaved changes, и закрывает только документы,
+которые открыла сама.
+
+`vent_make_gabarit` теперь умеет retrieved + associative overall width/height dimensions, explicit
+section/detail views, Parts List, balloons, hole table и техтребования. Координаты recipe подаются в мм,
+но должны быть откалиброваны на заводском шаблоне; `minimum_dimensions`/`minimum_balloons` превращают
+неполный drawing в FAIL.
+
+`vent_batch_flat_dxf` рекурсивно обходит вложенные occurrences, считает количество одинаковых деталей,
+и формирует проверяемое имя из thickness/material/quantity/Part Number/Description. Если имя материала
+Inventor не совпадает с заводским (`Ст3`, `09Г2С` и т. п.), передайте `materialAliases`; коллизия имён
+DXF является ошибкой, а не перезаписью.
+Отсутствующий flat pattern также является ошибкой; `createMissingFlatPatterns=true` — явный approved
+opt-in, который создаёт, rebuild-ит и сохраняет развёртку перед экспортом.

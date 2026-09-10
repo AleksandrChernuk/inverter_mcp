@@ -41,18 +41,22 @@ MCP-клиент (Claude) ──stdio──> Bimwright.Ipt.Server (.NET 8, бе�
 
 ## Домен-слой `vent` (Domain-Specific Adapter)
 
-Держим набор компактным (исследования: точность выбора инструмента падает после ~15 активных
-тулзов) — тонкий доменный слой поверх низкоуровневых тулзов базы:
+Прямой toolset содержит 19 операций для ручной диагностики. В автономном режиме LLM видит только
+курированные connector tools, а низкоуровневые операции вызывает детерминированный Product Job:
 
 | Тул (`inventor_vent_*`) | RO? | Wire-команда → Inventor API | Статус |
 |---|---|---|---|
 | `list_products` | ✓ | скан каталога изделий (индекс) | новый |
 | `open_product` | — | открыть .iam/.ipt изделия | обёртка над `open_document` |
+| `clone_recode_product` | — | SaveCopyAs + ReplaceReference + filenames/iProperties + manifest | новый |
+| `save_product` | — | bounded Save2 active + dirty dependencies только под product root | новый |
 | `set_casing_discharge` | — | `vent_set_discharge`: задать параметр разворота (Rd0/90/180/270 + правый/левый) → rebuild | новый |
 | `make_gabarit` | — | `vent_make_drawing`: IDW, base+проекции, авто-габаритные размеры, штамп, export PDF/DXF | **новый, крупный** |
-| `check_part` | ✓ | `vent_check_part`: замкнутость контура, min отступ отверстия от края, min перемычка, толщина листа | новый |
-| `batch_flat_dxf` | — | по деталям изделия: flat pattern → DXF (job-статус, не синхронно) | новый |
-| `bom_report` | ✓ | BOM изделия + материал/толщина/кол-во/площадь/длина реза | обёртка над `get_assembly_bom` + dxf-слой |
+| `check_part` | ✓ | fast model gate: sheet-metal type, flat pattern, thickness, flat bounds | новый |
+| `check_mounting_pattern` | ✓ | HoleFeature centers → count/diameter/BCD/angular spacing | новый |
+| `batch_flat_dxf` | — | nested parts → coded DXF + exact manifest/INCOMPLETE marker | новый |
+| `batch_pdf_drawings` | — | дерево IDW/DWG → PDF с per-file evidence | новый |
+| `bom_report` | ✓ | model-side material/thickness/quantity/flat bounds; area/cut length даёт DXF-слой | новый |
 
 ### «Разворот корпуса»
 У центробежных вентиляторов это положение выхлопа улитки (Rd 0/90/135/180/225/270/315,
@@ -74,16 +78,13 @@ Python + ezdxf поверх готовых DXF. Не требует Inventor, т
 - спецификация/каталог (материал, толщина, кол-во, габарит, площадь, длина реза);
 - проверка перед резкой (замкнутость, отступы, диаметры отверстий);
 - пакетная обработка сотен файлов.
-Эта же логика проверок переносится в C#-хендлер `vent_check_part`.
+`vent_check_part` служит быстрым model-side предусловием, а геометрические правила ниже независимо
+проверяются по фактически выпущенному DXF; один слой не подменяет другой.
 
 Проверено на 250 реальных DXF (см. `spec_sample.csv`): 0 ошибок парсинга, 239/250 имён
-распознано, суммарный рез ~1160 м. Известные доработки: сшивка контуров из дуг/линий в
-петли; отступ отверстия считать от реального контура, а не от bounding box.
+распознано, суммарный рез ~1160 м. Контуры LINE/ARC сшиваются в петли, а отступ отверстия
+считается от реального внешнего контура. `release.py` объединяет DXF/PDF/Excel/folder/hash gate.
 
-## План работ
-1. **Сейчас, на Mac (Track A):** довести `dxf_tools` — сшивка контуров, обе схемы имён,
-   отчёт-спецификация (CSV/HTML), пакетная правка DXF. Это самостоятельная ценность.
-2. **На Windows (Track B):** форк ipt-mcp, сборка сервера (.NET 8) и add-in под вашу версию
-   Inventor, дым-тест связи; затем toolset `vent`: `check_part`, `set_casing_discharge`,
-   `batch_flat_dxf`, `bom_report`; в конце — `make_gabarit` (IDW-шаблон под ваш штамп).
-3. Индекс «изделий» (каталог ВКРН / ВР 4-75 / ДН-26) → resolve имён из чата в файлы.
+## Следующий этап
+Windows acceptance на копии ВКР 6,3, затем извлечение настоящих family/drawing recipes из
+утверждённой КД и регистрация их revision в kvz-ai. Подробный чек-лист — `AUTONOMOUS_CONNECTOR.md`.

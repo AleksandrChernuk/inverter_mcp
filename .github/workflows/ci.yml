@@ -19,13 +19,23 @@ jobs:
       - name: Selftest
         run: python dxf_tools/selftest.py
 
-  gateway-syntax:
-    name: phase2 gateway (node --check)
+  phase2-node:
+    name: phase2 connector + gateway tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - name: Syntax check
-        run: node --check phase2/gateway/src/server.mjs
+      - name: Enable pnpm
+        run: corepack enable
+      - name: Install connector dependencies
+        run: pnpm --dir phase2/connectors-inventor install --frozen-lockfile
+      - name: Test connector
+        run: pnpm --dir phase2/connectors-inventor test
+      - name: Install gateway dependencies
+        run: pnpm --dir phase2/gateway install --frozen-lockfile
+      - name: Test gateway
+        run: pnpm --dir phase2/gateway test
+      - name: Gateway syntax check
+        run: pnpm --dir phase2/gateway check

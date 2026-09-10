@@ -15,17 +15,22 @@ public static partial class InventorCommandRegistry
     static partial void AddVent(Dictionary<string, IInventorCommand> d, Action<IInventorCommand> add)
     {
         add(new OpenProductHandler());
+        add(new CloneRecodeProductHandler());
         add(new SavePartAsHandler());
+        add(new SaveProductHandler());
         add(new SetDischargeHandler());
         add(new CheckPartHandler());
+        add(new CheckMountingPatternHandler());
         add(new MakeDrawingHandler());
         add(new BatchFlatDxfHandler());
+        add(new BatchPdfDrawingsHandler());
         add(new BomReportHandler());
         add(new InspectModelHandler());
         add(new DriveDimensionHandler());
         add(new SetComponentParameterHandler());
         add(new SetConstraintHandler());
         add(new SketchGeometryHandler());
+        add(new ExecutePlanHandler());
     }
 }
 #endif

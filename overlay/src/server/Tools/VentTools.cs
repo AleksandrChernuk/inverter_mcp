@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Bimwright.Ipt.Shared.Contracts;
@@ -11,6 +12,69 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Bimwright.Ipt.Server.Tools;
+
+public sealed class VentPlanMutationDto
+{
+    [JsonPropertyName("kind")] public string Kind { get; set; } = "";
+    [JsonPropertyName("name")] public string? Name { get; set; }
+    [JsonPropertyName("value")] public string? Value { get; set; }
+    [JsonPropertyName("occurrence")] public string? Occurrence { get; set; }
+    [JsonPropertyName("angle")] public int? Angle { get; set; }
+    [JsonPropertyName("hand")] public string? Hand { get; set; }
+    [JsonPropertyName("param_name")] public string? ParamName { get; set; }
+    [JsonPropertyName("material_name")] public string? MaterialName { get; set; }
+}
+
+public sealed class VentPlanMeasureSideDto
+{
+    [JsonPropertyName("occurrence")] public string Occurrence { get; set; } = "";
+    [JsonPropertyName("ref")] public string? Ref { get; set; }
+}
+
+public sealed class VentPlanCheckDto
+{
+    [JsonPropertyName("kind")] public string Kind { get; set; } = "";
+    [JsonPropertyName("occurrence")] public string? Occurrence { get; set; }
+    [JsonPropertyName("allowed_unhealthy")] public int? AllowedUnhealthy { get; set; }
+    [JsonPropertyName("max_pairs")] public int? MaxPairs { get; set; }
+    [JsonPropertyName("occurrences")] public string[]? Occurrences { get; set; }
+    [JsonPropertyName("a")] public VentPlanMeasureSideDto? A { get; set; }
+    [JsonPropertyName("b")] public VentPlanMeasureSideDto? B { get; set; }
+    [JsonPropertyName("min_mm")] public double? MinMm { get; set; }
+    [JsonPropertyName("max_mm")] public double? MaxMm { get; set; }
+    [JsonPropertyName("min_mass_g")] public double? MinMassG { get; set; }
+    [JsonPropertyName("max_mass_g")] public double? MaxMassG { get; set; }
+    [JsonPropertyName("min_x_mm")] public double? MinXmm { get; set; }
+    [JsonPropertyName("max_x_mm")] public double? MaxXmm { get; set; }
+    [JsonPropertyName("min_y_mm")] public double? MinYmm { get; set; }
+    [JsonPropertyName("max_y_mm")] public double? MaxYmm { get; set; }
+    [JsonPropertyName("min_z_mm")] public double? MinZmm { get; set; }
+    [JsonPropertyName("max_z_mm")] public double? MaxZmm { get; set; }
+    [JsonPropertyName("plane")] public string? Plane { get; set; }
+    [JsonPropertyName("hole_count")] public int? HoleCount { get; set; }
+    [JsonPropertyName("bolt_circle_diameter_mm")] public double? BoltCircleDiameterMm { get; set; }
+    [JsonPropertyName("hole_diameter_mm")] public double? HoleDiameterMm { get; set; }
+    [JsonPropertyName("center_mm")] public double[]? CenterMm { get; set; }
+    [JsonPropertyName("tolerance_mm")] public double? ToleranceMm { get; set; }
+    [JsonPropertyName("angle_tolerance_deg")] public double? AngleToleranceDeg { get; set; }
+}
+
+public sealed class VentSectionViewDto
+{
+    [JsonPropertyName("name")] public string? Name { get; set; }
+    [JsonPropertyName("start_mm")] public double[] StartMm { get; set; } = Array.Empty<double>();
+    [JsonPropertyName("end_mm")] public double[] EndMm { get; set; } = Array.Empty<double>();
+    [JsonPropertyName("position_mm")] public double[] PositionMm { get; set; } = Array.Empty<double>();
+}
+
+public sealed class VentDetailViewDto
+{
+    [JsonPropertyName("name")] public string? Name { get; set; }
+    [JsonPropertyName("center_mm")] public double[] CenterMm { get; set; } = Array.Empty<double>();
+    [JsonPropertyName("position_mm")] public double[] PositionMm { get; set; } = Array.Empty<double>();
+    [JsonPropertyName("radius_mm")] public double RadiusMm { get; set; }
+    [JsonPropertyName("scale")] public double? Scale { get; set; }
+}
 
 /// <summary>
 /// Vent-factory domain toolset (<c>vent</c>). A thin Domain-Specific Adapter over the base
@@ -138,12 +202,47 @@ public sealed class VentTools
     private static string Err(string code, string message)
         => JsonConvert.SerializeObject(new { ok = false, error = new { code, message } }, Formatting.Indented);
 
+    [McpServerTool(Name = "inventor_vent_clone_recode_product"),
+     Description("Pack-and-Go equivalent for a complete Inventor product tree. In dry_run mode (default) " +
+                 "returns the exact source→destination map and collision checks without writing. On execution, " +
+                 "native documents are SaveCopyAs copies (preserving InternalName), copied assembly/drawing " +
+                 "references are rebound with FileDescriptor.ReplaceReference, filenames and core iProperties " +
+                 "are recoded, and external shared references are reported but not copied. destination_root must " +
+                 "be a NEW folder under an allowed output root; maximum 512 files. A failed filesystem stage leaves " +
+                 "INCOMPLETE.json for recovery and never saves the source documents.")]
+    public Task<string> CloneRecodeProduct(
+        string sourceRoot,
+        string destinationRoot,
+        string topDocument,
+        string sourceCode,
+        string targetCode,
+        bool updateIproperties = true,
+        bool dryRun = true,
+        CancellationToken ct = default)
+        => Call("vent_clone_recode_product", new JObject
+        {
+            ["source_root"] = sourceRoot,
+            ["destination_root"] = destinationRoot,
+            ["top_document"] = topDocument,
+            ["source_code"] = sourceCode,
+            ["target_code"] = targetCode,
+            ["update_iproperties"] = updateIproperties,
+            ["dry_run"] = dryRun,
+        }, ct);
+
     [McpServerTool(Name = "inventor_vent_save_part_as"),
      Description("Save the ACTIVE part document as a NEW .ipt at output_path (derive a new part from the " +
                  "current one). output_path must be an absolute path under an allowed output root. Use for " +
                  "single-part derivations; for whole assemblies use vent_new_product (folder clone) or Pack-and-Go.")]
     public Task<string> SavePartAs(string outputPath, CancellationToken ct = default)
         => Call("vent_save_part_as", new JObject { ["output_path"] = outputPath }, ct);
+
+    [McpServerTool(Name = "inventor_vent_save_product"),
+     Description("Save the active part/assembly plus every dirty referenced Inventor document under the " +
+                 "approved product_root. Uses Document.Save2; refuses dirty external/library documents and " +
+                 "returns the exact save ledger. Use after all transactional checks pass.")]
+    public Task<string> SaveProduct(string productRoot, CancellationToken ct = default)
+        => Call("vent_save_product", new JObject { ["product_root"] = productRoot }, ct);
 
     [McpServerTool(Name = "inventor_vent_open_product"),
      Description("Open a product's top assembly (.iam) or a specific part (.ipt) in Inventor by absolute " +
@@ -176,6 +275,32 @@ public sealed class VentTools
     public Task<string> CheckPart(CancellationToken ct = default)
         => Call("vent_check_part", new JObject(), ct);
 
+    [McpServerTool(Name = "inventor_vent_check_mounting_pattern"),
+     Description("Validate the actual motor/flange mounting-hole pattern from HoleFeature centers. Checks hole " +
+                 "count, bolt-circle radius and equal angular spacing on plane xy|xz|yz, optionally filtering by " +
+                 "hole diameter. For an assembly pass occurrence; for a part omit it. All lengths are mm. Read-only.")]
+    public Task<string> CheckMountingPattern(
+        int holeCount,
+        double boltCircleDiameterMm,
+        string plane = "xy",
+        string? occurrence = null,
+        double? holeDiameterMm = null,
+        double[]? centerMm = null,
+        double toleranceMm = 0.25,
+        double angleToleranceDeg = 1.0,
+        CancellationToken ct = default)
+        => Call("vent_check_mounting_pattern", new JObject
+        {
+            ["hole_count"] = holeCount,
+            ["bolt_circle_diameter_mm"] = boltCircleDiameterMm,
+            ["plane"] = plane,
+            ["occurrence"] = occurrence,
+            ["hole_diameter_mm"] = holeDiameterMm,
+            ["center_mm"] = centerMm is null ? null : new JArray(centerMm),
+            ["tolerance_mm"] = toleranceMm,
+            ["angle_tolerance_deg"] = angleToleranceDeg,
+        }, ct);
+
     [McpServerTool(Name = "inventor_vent_make_gabarit"),
      Description("Generate an overall-dimension drawing (\"габаритка\") for the active part/assembly: creates a " +
                  "drawing from the idw template, places a base view + projections, retrieves overall dimensions, " +
@@ -186,6 +311,16 @@ public sealed class VentTools
         [Description("Drawing scale, e.g. 0.1 for 1:10. Omit to auto-fit.")] double? scale = null,
         [Description("Also export the drawing to DXF next to the PDF. Default false.")] bool exportDxf = false,
         [Description("Absolute path to a custom .idw/.dwg template with your title block. Optional.")] string? template = null,
+        [Description("Retrieve model dimensions into the base view.")] bool retrieveDimensions = true,
+        [Description("Create associative overall width/height dimensions from visible base-view geometry.")] bool addOverallDimensions = true,
+        [Description("For an assembly, require a Parts List.")] bool requirePartsList = false,
+        [Description("For an assembly, require automatic balloons and enforce minimumBalloons.")] bool requireBalloons = false,
+        [Description("Minimum balloons required when requireBalloons=true.")] int minimumBalloons = 1,
+        [Description("Require a non-empty associative hole table for the base view.")] bool requireHoleTable = false,
+        [Description("Minimum retrieved dimensions required for this drawing to pass.")] int minimumDimensions = 0,
+        [Description("Numbered technical requirements placed on the sheet.")] string[]? technicalNotes = null,
+        [Description("Explicit section-line recipes in sheet coordinates (mm).")] VentSectionViewDto[]? sectionViews = null,
+        [Description("Explicit detail-view recipes in sheet coordinates (mm).")] VentDetailViewDto[]? detailViews = null,
         CancellationToken ct = default)
         => Call("vent_make_drawing", new JObject
         {
@@ -193,6 +328,16 @@ public sealed class VentTools
             ["scale"] = scale,
             ["export_dxf"] = exportDxf,
             ["template"] = template,
+            ["retrieve_dimensions"] = retrieveDimensions,
+            ["add_overall_dimensions"] = addOverallDimensions,
+            ["require_parts_list"] = requirePartsList,
+            ["require_balloons"] = requireBalloons,
+            ["minimum_balloons"] = minimumBalloons,
+            ["require_hole_table"] = requireHoleTable,
+            ["minimum_dimensions"] = minimumDimensions,
+            ["technical_notes"] = technicalNotes is null ? new JArray() : new JArray(technicalNotes),
+            ["section_views"] = sectionViews is null ? new JArray() : JArray.FromObject(sectionViews),
+            ["detail_views"] = detailViews is null ? new JArray() : JArray.FromObject(detailViews),
         }, ct);
 
     [McpServerTool(Name = "inventor_vent_batch_flat_dxf"),
@@ -202,11 +347,31 @@ public sealed class VentTools
     public Task<string> BatchFlatDxf(
         string outputDir,
         [Description("Folder of .ipt files to process instead of the active assembly's parts. Optional.")] string? partsDir = null,
+        [Description("Optional mapping from Inventor material names to factory filename aliases such as Ст3.")] Dictionary<string, string>? materialAliases = null,
+        [Description("Create, rebuild and save missing flat patterns before export. Default false; explicit opt-in because this changes parts.")] bool createMissingFlatPatterns = false,
         CancellationToken ct = default)
         => Call("vent_batch_flat_dxf", new JObject
         {
             ["output_dir"] = outputDir,
             ["parts_dir"] = partsDir,
+            ["material_aliases"] = materialAliases is null ? new JObject() : JObject.FromObject(materialAliases),
+            ["create_missing_flat_patterns"] = createMissingFlatPatterns,
+        }, ct);
+
+    [McpServerTool(Name = "inventor_vent_batch_pdf_drawings"),
+     Description("Export every .idw/.dwg in a product drawing tree to PDF, preserving relative subfolders. " +
+                 "Returns a per-drawing ledger and pass=false if any translation failed. output_dir must be under " +
+                 "an allowed export root; maximum 256 drawings.")]
+    public Task<string> BatchPdfDrawings(
+        string drawingsDir,
+        string outputDir,
+        bool recursive = true,
+        CancellationToken ct = default)
+        => Call("vent_batch_pdf_drawings", new JObject
+        {
+            ["drawings_dir"] = drawingsDir,
+            ["output_dir"] = outputDir,
+            ["recursive"] = recursive,
         }, ct);
 
     [McpServerTool(Name = "inventor_vent_bom_report"),
@@ -264,6 +429,30 @@ public sealed class VentTools
         [Description("Sketch name, e.g. \"Эскиз3\" from inventor_vent_inspect_model.")] string sketch,
         CancellationToken ct = default)
         => Call("vent_inspect_sketch", new JObject { ["sketch"] = sketch }, ct);
+
+    [McpServerTool(Name = "inventor_vent_execute_plan"),
+     Description("Execute a bounded autonomous engineering plan against the ACTIVE part/assembly. Mutations " +
+                 "(drive_dimension, set_component_parameter, set_constraint, set_casing_discharge, set_material) " +
+                 "run in one Inventor transaction, followed by Update2(false) and objective checks " +
+                 "(model_health, part_cut_ready, constraints_healthy, no_interference, min_distance, physical_bounds, mounting_pattern). " +
+                 "Mutations may be empty for an independent validation-only pass. Any failed mutation/rebuild/check " +
+                 "aborts the active-document transaction and restores the referenced-document snapshot. A passing run " +
+                 "does NOT save; call inventor_vent_save_product only after approval. dryRun defaults true and only " +
+                 "validates the plan. Limits: 256 mutations and 64 checks; arbitrary code is not supported.")]
+    public Task<string> ExecutePlan(
+        [Description("Typed mutations in dependency order; every item needs a supported kind and its kind-specific fields.")]
+        VentPlanMutationDto[] mutations,
+        [Description("Objective acceptance checks evaluated after the final rebuild. At least one check is required.")]
+        VentPlanCheckDto[] checks,
+        [Description("When true (default), validate only and do not touch the model. Pass false to execute.")]
+        bool dryRun = true,
+        CancellationToken ct = default)
+        => Call("vent_execute_plan", new JObject
+        {
+            ["mutations"] = JArray.FromObject(mutations ?? Array.Empty<VentPlanMutationDto>()),
+            ["checks"] = JArray.FromObject(checks ?? Array.Empty<VentPlanCheckDto>()),
+            ["dry_run"] = dryRun,
+        }, ct);
 
     // ---- helper (mirrors ExportTools.Call) ----
     private async Task<string> Call(string command, JObject p, CancellationToken ct)

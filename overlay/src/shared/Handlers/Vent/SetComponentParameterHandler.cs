@@ -44,10 +44,10 @@ public sealed class SetComponentParameterHandler : HandlerBase, IInventorCommand
         var asmDef = (AssemblyComponentDefinition)asm.ComponentDefinition;
 
         // find the occurrence by exact name, else by name without the ":N" instance suffix
-        ComponentOccurrence? occ = FindOccurrence(asmDef, occName!);
+        ComponentOccurrence? occ = FindOccurrence(asmDef.Occurrences, occName!, out string? occurrenceError);
         if (occ is null)
             return Fail(ctx, InventorErrorCodes.INVALID_ARGUMENT,
-                $"component '{occName}' not found (use inventor_get_assembly_bom to list names)");
+                occurrenceError ?? $"component '{occName}' not found (use inventor_get_assembly_bom to list names)");
 
         ComponentDefinition compDef;
         try { compDef = occ.Definition; }
@@ -115,24 +115,81 @@ public sealed class SetComponentParameterHandler : HandlerBase, IInventorCommand
         });
     }
 
-    private static ComponentOccurrence? FindOccurrence(AssemblyComponentDefinition asmDef, string wanted)
+    private static ComponentOccurrence? FindOccurrence(
+        System.Collections.IEnumerable occurrences,
+        string wanted,
+        out string? error)
     {
-        string wantedBase = StripInstance(wanted);
-        try
+        error = null;
+        string[] path = wanted.Split(new[] { '/', '>' }, StringSplitOptions.RemoveEmptyEntries);
+        if (path.Length > 1)
         {
-            foreach (ComponentOccurrence o in asmDef.Occurrences)
+            System.Collections.IEnumerable level = occurrences;
+            ComponentOccurrence? current = null;
+            foreach (string segment in path)
             {
-                string on; try { on = o.Name; } catch { continue; }
-                if (string.Equals(on, wanted, StringComparison.OrdinalIgnoreCase)) return o;
+                var matches = DirectMatches(level, segment);
+                if (matches.Count != 1)
+                {
+                    error = $"component path segment '{segment}' matched {matches.Count} occurrences";
+                    return null;
+                }
+                current = matches[0];
+                level = current.SubOccurrences;
             }
-            foreach (ComponentOccurrence o in asmDef.Occurrences)
-            {
-                string on; try { on = o.Name; } catch { continue; }
-                if (string.Equals(StripInstance(on), wantedBase, StringComparison.OrdinalIgnoreCase)) return o;
-            }
+            return current;
         }
-        catch { /* ignore */ }
+
+        var exact = new System.Collections.Generic.List<ComponentOccurrence>();
+        var byBase = new System.Collections.Generic.List<ComponentOccurrence>();
+        CollectMatches(occurrences, wanted, exact, byBase);
+        if (exact.Count == 1) return exact[0];
+        if (exact.Count > 1)
+        {
+            error = $"component '{wanted}' is ambiguous ({exact.Count} matches); use a '/' occurrence path";
+            return null;
+        }
+        if (byBase.Count == 1) return byBase[0];
+        error = byBase.Count > 1
+            ? $"component '{wanted}' is ambiguous ({byBase.Count} base-name matches); use exact ':N' names and a '/' path"
+            : $"component '{wanted}' not found (use inventor_get_assembly_bom to list names)";
         return null;
+    }
+
+    private static System.Collections.Generic.List<ComponentOccurrence> DirectMatches(
+        System.Collections.IEnumerable occurrences, string wanted)
+    {
+        var exact = new System.Collections.Generic.List<ComponentOccurrence>();
+        var byBase = new System.Collections.Generic.List<ComponentOccurrence>();
+        foreach (ComponentOccurrence occurrence in occurrences)
+        {
+            string occurrenceName;
+            try { occurrenceName = occurrence.Name; } catch { continue; }
+            if (string.Equals(occurrenceName, wanted, StringComparison.OrdinalIgnoreCase)) exact.Add(occurrence);
+            else if (string.Equals(StripInstance(occurrenceName), StripInstance(wanted), StringComparison.OrdinalIgnoreCase)) byBase.Add(occurrence);
+        }
+        return exact.Count > 0 ? exact : byBase;
+    }
+
+    private static void CollectMatches(
+        System.Collections.IEnumerable occurrences,
+        string wanted,
+        System.Collections.Generic.List<ComponentOccurrence> exact,
+        System.Collections.Generic.List<ComponentOccurrence> byBase)
+    {
+        foreach (ComponentOccurrence occurrence in occurrences)
+        {
+            string occurrenceName;
+            try { occurrenceName = occurrence.Name; } catch { continue; }
+            if (string.Equals(occurrenceName, wanted, StringComparison.OrdinalIgnoreCase)) exact.Add(occurrence);
+            else if (string.Equals(StripInstance(occurrenceName), StripInstance(wanted), StringComparison.OrdinalIgnoreCase)) byBase.Add(occurrence);
+            try
+            {
+                if (occurrence.SubOccurrences != null && occurrence.SubOccurrences.Count > 0)
+                    CollectMatches(occurrence.SubOccurrences, wanted, exact, byBase);
+            }
+            catch { }
+        }
     }
 
     private static string StripInstance(string n)

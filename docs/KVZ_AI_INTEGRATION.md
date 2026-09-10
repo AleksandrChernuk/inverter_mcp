@@ -13,15 +13,16 @@ kvz-ai**, а платформа маршрутизирует её в конне�
   «в изделии ВКРН-5 поставь диаметр колеса 500, разворот корпуса Rd90 правый,
    проверь контуры и сделай габаритку»
         │
-   kvz-ai: очередь → worker → роль разрешает? → executor разбирает запрос
+   kvz-ai: очередь → worker → inspect → формирует строгий JobSpec
         │
-   вызовы коннектора Inventor:  vent_open_product → set_parameter → vent_set_casing_discharge
-                                → vent_check_part → (approval gate) → vent_make_gabarit
+   connector: prepare_job → plan SHA-256 → approval gate → execute_job
+              → clone/recode → family recipe → transaction + checks → PDF/DXF/Excel
+              → release SHA-256 → chief approval → workshop webhook
         │
    Inventor на цеховой Windows-машине выполняет, worker возвращает результат в чат.
 ```
-Чтение (список изделий, параметры, проверки, спецификация) идёт свободно; **любое изменение/экспорт —
-за approval-gate и по роли** (как write-операции у bitrix).
+Чтение идёт свободно; **любое изменение/экспорт — за approval-gate и по роли**. Approval связан с
+digest точного плана: после подтверждения модель не может незаметно подменить действия.
 
 ## Фазность (решено)
 - **Фаза 1 — сейчас, напрямую через Claude app (Claude Desktop).** MCP-клиент = Claude Desktop на
@@ -37,13 +38,20 @@ local pipe). Worker kvz-ai — отдельно (Linux/облако), поэто
 - Коннектор `connectors/inventor/` (TS, паттерн cad-activity) ходит в этот шлюз.
 - (Вариант A — worker на самой Windows-машине, коннектор spawn'ит Server.exe по stdio — не наш случай.)
 
-## Что нужно добавить в kvz-ai (следующий шаг)
-Коннектор `connectors/inventor/` в стиле `cad-activity`:
-- TS + `@modelcontextprotocol/sdk` + zod-схемы, bearer `CONNECTOR_TOKEN`, аудит, строгие входные схемы.
-- **read-only по умолчанию**; write-тулзы (`set_parameter`, `vent_set_casing_discharge`,
-  `vent_make_gabarit`, `vent_batch_flat_dxf`) — отдельная capability, включается ролью + approval-gate.
-- Проксирует vent-тулзы на `Bimwright.Ipt.Server.exe` (Вариант A — spawn stdio; Вариант B — HTTP-шлюз).
-- Регистрация в реестре коннекторов/tools kvz-ai + role-gating (см. `connectors/AGENTS.md` в kvz-ai).
+## Что уже есть в коннекторе
+- Курированные MCP tools: connection/catalog/open/inspect/check + prepare/status/execute/release approval.
+- `JobSpec v1` для единичных правок и `Product Job v2` для полного изделия: clone/recode, signed family
+  recipe, construction/assembly, motor/drawing/release gates; лишние поля запрещены.
+- Persistent checkpoint после каждой стадии и append-only JSONL audit.
+- `inventor_execute_job` регистрируется только при `WRITE_ENABLED=1`.
+- Preflight фактического gateway inventory, baseline/final evidence и отсутствие auto-retry при
+  неопределённом результате write-вызова.
+- Offline DXF/папки/PDF/Excel manifest + отдельный chief release digest; webhook только после approval.
+
+Следующий шаг — скопировать в `kvz-ai/connectors/inventor/`, зарегистрировать tools и поставить
+approval-gate именно перед `inventor_execute_job` (см. `phase2/connectors-inventor/README.md`).
+Для v2 нужен второй approval-gate перед `inventor_approve_release`; UI должен показывать release report,
+manifest/digest и имя утверждающего.
 
 ## Каталог и безопасность
 - Внутри kvz-ai видеть **весь каталог** уместно: платформа — это security boundary (роли, аудит,

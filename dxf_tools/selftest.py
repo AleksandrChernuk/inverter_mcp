@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Автономный самотест dxf_tools для CI — без внешних файлов.
 Создаёт DXF в temp, прогоняет analyze; проверяет spec_xlsx на фиксированных строках."""
-import os, sys, tempfile
+import json, os, re, sys, tempfile
 sys.path.insert(0, os.path.dirname(__file__))
 import ezdxf
 from analyze import analyze, parse_name
 from spec_xlsx import write_spec
+from release import build_release
 
 
 def make_dxf(path):
@@ -44,6 +45,46 @@ def main():
         expected = round(9.556 + 1.221 * 8, 4)
         if not approx(total, expected): fails.append(f"spec total {total} != {expected}")
         if not os.path.exists(out): fails.append("spec.xlsx not written")
+
+        # complete release gate: checked DXF + PDF + hashes + approval digest
+        product = os.path.join(d, "product")
+        dxf_dir = os.path.join(product, "DXF")
+        pdf_dir = os.path.join(product, "PDF")
+        release_dir = os.path.join(product, "release")
+        os.makedirs(dxf_dir); os.makedirs(pdf_dir)
+        release_dxf = os.path.join(dxf_dir, "3мм Ст3 2шт КВЗ.ВКР-7.1.00.001 SELFTEST.dxf")
+        make_dxf(release_dxf)
+        with open(os.path.join(dxf_dir, "dxf-export-manifest.json"), "w", encoding="utf-8") as stream:
+            json.dump({
+                "state": "complete", "pass": True,
+                "dxf_files": [os.path.basename(release_dxf)],
+            }, stream)
+        with open(os.path.join(pdf_dir, "КВЗ.ВКР-7.1.00.001.pdf"), "wb") as stream:
+            stream.write(b"%PDF-1.4 selftest")
+        report = build_release(
+            product, dxf_dir, release_dir, "КВЗ.ВКР-7.1",
+            pdf_dir=pdf_dir, minimum_pdf_count=1, required_name_pattern=r"КВЗ[.]ВКР",
+            require_dxf_manifest=True,
+        )
+        if not report["pass"]: fails.append(f"release did not pass: {report['checks']}")
+        if not re.fullmatch(r"[a-f0-9]{64}", report["release_digest"]): fails.append("bad release digest")
+        if not os.path.exists(report["artifacts"]["xlsx"]): fails.append("release XLSX not written")
+        repeated = build_release(
+            product, dxf_dir, release_dir, "КВЗ.ВКР-7.1",
+            pdf_dir=pdf_dir, minimum_pdf_count=1, required_name_pattern=r"КВЗ[.]ВКР",
+            require_dxf_manifest=True,
+        )
+        if repeated["release_digest"] != report["release_digest"]:
+            fails.append("unchanged release digest is not reproducible")
+        with open(os.path.join(pdf_dir, "КВЗ.ВКР-7.1.00.001.pdf"), "ab") as stream:
+            stream.write(b" changed")
+        changed = build_release(
+            product, dxf_dir, release_dir, "КВЗ.ВКР-7.1",
+            pdf_dir=pdf_dir, minimum_pdf_count=1, required_name_pattern=r"КВЗ[.]ВКР",
+            require_dxf_manifest=True,
+        )
+        if changed["release_digest"] == report["release_digest"]:
+            fails.append("release digest did not change after a source artifact changed")
 
     if fails:
         print("SELFTEST FAILED:")

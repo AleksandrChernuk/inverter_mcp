@@ -30,15 +30,31 @@
    - **Габаритка:** «сделай габаритку в D:\DXF_OUT\vkrn5.pdf» → `inventor_vent_make_gabarit`.
    - **Пакетный DXF:** «выгрузи все развёртки этого изделия в D:\DXF_OUT\vkrn5» → `inventor_vent_batch_flat_dxf`.
    - **Спецификация:** «дай спецификацию по сборке» → `inventor_vent_bom_report`.
-   - **Новое изделие (клон шаблона):** «создай ВКРН-5.6 из ВКРН-5» → `inventor_vent_new_product`
-     (копия папки-шаблона) → `open_product` → задать размеры → `batch_flat_dxf`. Для одиночной
-     детали — `inventor_vent_save_part_as`. Клон сборки с абсолютными ссылками — через Pack-and-Go
-     (доводится вживую).
+   - **Новое изделие:** «создай ВКРН-5.6 из ВКРН-5» → `inventor_vent_clone_recode_product`
+     (`dryRun=true`, проверить карту; затем execute) → family recipe → checks → drawing/PDF/DXF/release.
+     Native копии создаются SaveCopyAs, а copied IAM/IDW перепривязываются; простой `vent_new_product`
+     оставлен только для каталогов с уже доказанными относительными ссылками.
 
 > Фаза 1 (сейчас): MCP-клиент = **Claude Desktop** на цеховой Windows-машине, напрямую к Server.exe.
 > Фаза 2: через kvz-ai (см. KVZ_AI_INTEGRATION.md). Создание изделий требует edit-профиля / роли.
 
 3. Клиент показывает результат (габарит, дельту, список проверок, пути к файлам). Правьте задачу словами.
+
+## Автономный режим через kvz-ai (Фаза 2)
+1. Агент открывает изделие и вызывает `inventor_inspect_model` либо `inventor_inspect_assembly`.
+2. `inventor_prepare_job` валидирует mutations/checks/outputs, сохраняет checkpoint и возвращает digest.
+3. Конструктор/главный конструктор подтверждает именно этот digest в approval-gate kvz-ai.
+4. `inventor_execute_job` делает preflight и вызывает одну транзакционную команду
+   `inventor_vent_execute_plan`. FAIL означает rollback; save/export не запускаются.
+5. Для JobSpec v1 финал `succeeded`. Product Job v2 после CAD/документации создаёт Excel/manifest и
+   останавливается в `awaiting_release_approval` с отдельным release digest.
+6. Главный конструктор проверяет артефакты и вызывает `inventor_approve_release` с digest и своим именем.
+   Только успешное сообщение в настроенный webhook даёт статус `released`.
+7. При финальном статусе в `inventor_job_status` лежат baseline, все проверки, output и release evidence.
+   При `uncertain` ничего не повторяйте: сначала осмотрите открытую модель и audit.
+
+Пример полного JobSpec — `phase2/connectors-inventor/README.md`; архитектурные инварианты и Windows
+acceptance tests — `docs/AUTONOMOUS_CONNECTOR.md`.
 
 ## Правила безопасности (важно для цеха)
 - **Экспорт только в разрешённую папку** (`BIMWRIGHT_INVENTOR_EXPORT_ROOT`) — иначе `INVALID_ARGUMENT`.
@@ -47,6 +63,8 @@
 - **Несколько Inventor** — выбирайте нужный `inventor_switch_target` по 4-значному году; проверяйте
   активный `inventor_get_current_target`, чтобы не менять не ту модель.
 - **Всегда feedback loop**: изменил → `update` → `check_part`/`measure` → и только потом экспорт/габаритка.
+- **Автономный save только после PASS:** не вызывайте низкоуровневые write-тулзы в обход `execute_job`.
+- **`uncertain` не равен failed:** write мог завершиться до обрыва; автоматический retry запрещён.
 - **Долгие операции** (`batch_flat_dxf`) запускайте по одному изделию, не по всему каталогу.
 
 ## Диагностика

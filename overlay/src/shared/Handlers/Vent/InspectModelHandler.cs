@@ -38,16 +38,27 @@ public sealed class InspectModelHandler : HandlerBase, IInventorCommand
 
         // ---- features ----
         var features = new JArray();
+        int unhealthyFeatures = 0;
         try
         {
             foreach (PartFeature f in pdef.Features)
             {
-                string fname, ftype;
+                string fname, ftype, health;
                 try { fname = f.Name; } catch { fname = "?"; }
                 try { ftype = ShortType(f.Type.ToString()); } catch { ftype = "?"; }
+                try { health = f.HealthStatus.ToString(); } catch { health = "unknown"; }
                 bool supp = false;
                 try { supp = f.Suppressed; } catch { }
-                features.Add(new JObject { ["name"] = fname, ["type"] = ftype, ["suppressed"] = supp });
+                bool healthy = supp || string.Equals(health, "kUpToDateHealth", StringComparison.OrdinalIgnoreCase);
+                if (!healthy) unhealthyFeatures++;
+                features.Add(new JObject
+                {
+                    ["name"] = fname,
+                    ["type"] = ftype,
+                    ["suppressed"] = supp,
+                    ["health"] = health,
+                    ["healthy"] = healthy,
+                });
                 if (features.Count >= maxFeatures) break;
             }
         }
@@ -90,10 +101,12 @@ public sealed class InspectModelHandler : HandlerBase, IInventorCommand
             ["part"] = doc.DisplayName,
             ["is_sheet_metal"] = doc.ComponentDefinition is SheetMetalComponentDefinition,
             ["feature_count"] = features.Count,
+            ["healthy"] = unhealthyFeatures == 0,
+            ["unhealthy_feature_count"] = unhealthyFeatures,
             ["features"] = features,
             ["sketch_count"] = sketches.Count,
             ["sketches"] = sketches,
-            ["note"] = "Ищите нужный драйвер по kind=radius/diameter/linear и значению в expression; менять размер будем через vent_set_sketch_dimension.",
+            ["note"] = "Ищите нужный драйвер по kind=radius/diameter/linear и значению в expression; меняйте его через vent_drive_dimension и после изменения снова проверяйте healthy/unhealthy_feature_count.",
         });
     }
 

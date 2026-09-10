@@ -8,7 +8,9 @@ C#-исходники нашего toolset `vent`. Копируются в фо�
   зовут `_client.SendAsync(wire_command, params)`). `list_products` — server-side (скан ФС).
 - `src/shared/Handlers/Vent/*.cs` — wire-хендлеры (трогают Inventor API), возвращают DTO:
   `OpenProductHandler`, `SetDischargeHandler`, `CheckPartHandler`, `MakeDrawingHandler`,
-  `BatchFlatDxfHandler`, `BomReportHandler`, общий `VentSupport`.
+  `CloneRecodeProductHandler`, `CheckMountingPatternHandler`, `BatchFlatDxfHandler`,
+  `BatchPdfDrawingsHandler`, `SaveProductHandler`, `BomReportHandler`, inspect/drive assembly handlers,
+  транзакционный `ExecutePlanHandler`, общий `VentSupport`.
 - `src/shared/Plugin/InventorCommandRegistry.Vent.cs` — partial registrar `AddVent`.
 - `INTEGRATION.md` — 3 правки базовых файлов (ToolsetFilter, Program, InventorCommandRegistry).
 
@@ -18,12 +20,22 @@ C#-исходники нашего toolset `vent`. Копируются в фо�
 | `inventor_vent_list_products` | (нет, server-side) | нет |
 | `inventor_vent_new_product` | (нет, server-side — копия папки-шаблона) | да (создаёт файлы) |
 | `inventor_vent_save_part_as` | `vent_save_part_as` | да (создаёт файл) |
+| `inventor_vent_save_product` | `vent_save_product` | да (Save2 активного изделия и dirty dependencies) |
 | `inventor_vent_open_product` | `vent_open_product` | да |
+| `inventor_vent_clone_recode_product` | `vent_clone_recode_product` | да (создаёт изолированное дерево) |
 | `inventor_vent_set_casing_discharge` | `vent_set_discharge` | да |
 | `inventor_vent_check_part` | `vent_check_part` | нет |
+| `inventor_vent_check_mounting_pattern` | `vent_check_mounting_pattern` | нет |
 | `inventor_vent_make_gabarit` | `vent_make_drawing` | да |
 | `inventor_vent_batch_flat_dxf` | `vent_batch_flat_dxf` | да |
+| `inventor_vent_batch_pdf_drawings` | `vent_batch_pdf_drawings` | да |
 | `inventor_vent_bom_report` | `vent_bom_report` | нет |
+| `inventor_vent_inspect_model` | `vent_inspect_model` | нет |
+| `inventor_vent_drive_dimension` | `vent_drive_dimension` | да |
+| `inventor_vent_set_component_parameter` | `vent_set_component_parameter` | да |
+| `inventor_vent_set_constraint` | `vent_set_constraint` | да |
+| `inventor_vent_inspect_sketch` | `vent_inspect_sketch` | нет |
+| `inventor_vent_execute_plan` | `vent_execute_plan` | да (transaction + referenced-tree snapshot; dry-run не мутирует) |
 
 ## Правила для агента
 - Стиль строго как в базе: `HandlerBase` (`Ok`/`Fail`), `IInventorCommand { Name; IsReadOnly; Execute }`,

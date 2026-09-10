@@ -1,31 +1,33 @@
-# Фаза 2 — интеграция с kvz-ai (топология B)
+# Фаза 2 — автономный конструктор через kvz-ai
 
-Worker kvz-ai работает отдельно (Linux/облако), Inventor — на цеховой Windows-машине.
-Два компонента-скелета:
+Worker `kvz-ai` работает отдельно, Inventor — на Windows-машине. Реализованы два компонента:
 
+```text
+задача в чате
+  → kvz-ai planner (JobSpec v1 / Product Job v2)
+  → connectors-inventor (plan + release approval/checkpoints/audit)
+  → gateway (auth/allowlist/release worker/webhook)
+  → Bimwright.Ipt.Server.exe
+  → add-in: vent_execute_plan (Inventor transaction + objective checks)
+  → Inventor 2026 → PDF/DXF → offline DXF/Excel/hash gate → цех
 ```
-worker kvz-ai ──stdio(MCP)──> connectors/inventor  ──HTTP(+токен)──>  gateway (Windows)
-                              (TS MCP-сервер,                         (Node, HTTP поверх
-                               паттерн cad-activity)                   stdio-MCP .NET-сервера)
-                                                                              │ stdio(MCP)
-                                                                     Bimwright.Ipt.Server.exe
-                                                                              │ pipe
-                                                                          Inventor 2026
-```
 
-- `gateway/` — ставится и запускается **на Windows-машине с Inventor**. Поднимает `Server.exe`
-  (MCP по stdio) и отдаёт его наружу как HTTP-сервис (`/health`, `/tools/list`, `/tools/call`)
-  с bearer-токеном и allowlist'ом. Это «внутренний Inventor-сервис» (аналог ACTIVITY_SERVICE_URL у cad-activity).
-- `connectors-inventor/` — копируется в kvz-ai как `connectors/inventor/`. TS MCP-сервер (stdio),
-  который worker подключает; проксирует курированный набор vent-тулзов на gateway по HTTP.
-  read-only по умолчанию; write-тулзы за `WRITE_ENABLED`/ролью + approval-gate kvz-ai.
+`connectors-inventor/` — MCP-сервер для worker. Он даёт агенту компактный набор inspect/job-тулзов,
+хранит план и доказательства, связывает approval с SHA-256 digest и никогда автоматически не повторяет
+операцию с неопределённым результатом.
 
-## Оба — СКЕЛЕТЫ
-Компилируются/структурно готовы, но требуют доводки на Windows: реальный запуск `Server.exe`,
-токены из 1Password/секрет-стора, привязка к сети (LAN/VPN), регистрация коннектора в реестре kvz-ai.
-См. `docs/KVZ_AI_INTEGRATION.md` и `TODO.md` (раздел «Фаза 2»).
+`gateway/` — Windows HTTP-транспорт поверх локального stdio-MCP: bearer, безопасный allowlist,
+rate-limit, лимит тела, reconnect и JSONL-аудит.
 
-## Защита (defense-in-depth)
-1. `Server.exe` профиль `--read-only` для смотровых сессий.
-2. gateway: allowlist тулзов + bearer + bind только на нужный интерфейс.
-3. connector: `WRITE_ENABLED` gate + role-gating и approval-gate самого kvz-ai.
+Изменения применяются не последовательностью беззащитных HTTP-вызовов, а одной командой
+`inventor_vent_execute_plan`: она открывает транзакцию Inventor, выполняет ограниченные mutations,
+делает `Update2(false)`, проверяет здоровье/constraints/interference/min-distance/физические границы и
+откатывает всё при любом FAIL. Сохранение и экспорт идут только после PASS.
+
+Product Job v2 добавляет clone/recode через SaveCopyAs+ReplaceReference, signed family formulas,
+typed создание деталей/сборок/метизов, motor-hole checks, drawing recipes, batch PDF/DXF, Excel и
+release manifest. После первого approval задача доходит только до `awaiting_release_approval`;
+сообщение в цех и статус `released` возможны после второго digest approval главного конструктора.
+
+Остаётся интеграционная работа на Windows/в `kvz-ai`: принять C# handlers на реальных сборках Inventor
+2026, снять утверждённые formulas/named refs/drawing coordinates из КД, подключить IDW-шаблоны и webhook.
