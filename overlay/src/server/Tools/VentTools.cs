@@ -232,6 +232,30 @@ public sealed class VentTools
         CancellationToken ct = default)
         => Call("vent_drive_dimension", new JObject { ["name"] = name, ["value"] = value }, ct);
 
+    [McpServerTool(Name = "inventor_vent_set_component_parameter"),
+     Description("Assembly editor: in the ACTIVE assembly, set a parameter of a named component (occurrence, " +
+                 "e.g. \"КВЗ...Диск нижній:1\" from inventor_get_assembly_bom; the \":N\" suffix is optional) by " +
+                 "name+value, rebuild, and report the assembly's new bounding box and mass. Drive part dimensions " +
+                 "from the top assembly without opening each part. Changes the shared part file; NOT saved to disk.")]
+    public Task<string> SetComponentParameter(
+        [Description("Component/occurrence name, e.g. from inventor_get_assembly_bom.")] string occurrence,
+        string name,
+        [Description("New expression, e.g. \"340 mm\".")] string value,
+        CancellationToken ct = default)
+        => Call("vent_set_component_parameter",
+                new JObject { ["occurrence"] = occurrence, ["name"] = name, ["value"] = value }, ct);
+
+    [McpServerTool(Name = "inventor_vent_set_constraint"),
+     Description("Assembly editor (constraints): in the ACTIVE assembly, change a named constraint's driving " +
+                 "value — offset of a mate/flush/insert, or angle of an angle constraint — then rebuild and " +
+                 "report the assembly's new bounding box and mass. Names from inventor_list_constraints " +
+                 "(e.g. \"Заподлицо:9\"); value like \"5 mm\" or \"30 deg\". NOT saved to disk.")]
+    public Task<string> SetConstraint(
+        [Description("Constraint name, e.g. from inventor_list_constraints.")] string name,
+        [Description("New offset/angle expression, e.g. \"5 mm\" or \"30 deg\".")] string value,
+        CancellationToken ct = default)
+        => Call("vent_set_constraint", new JObject { ["name"] = name, ["value"] = value }, ct);
+
     // ---- helper (mirrors ExportTools.Call) ----
     private async Task<string> Call(string command, JObject p, CancellationToken ct)
     {
