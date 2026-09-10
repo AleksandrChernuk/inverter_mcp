@@ -49,6 +49,24 @@ AddVent(d, Add);          // vent-factory toolset
 static partial void AddVent(Dictionary<string, IInventorCommand> d, Action<IInventorCommand> add);
 ```
 
+### `src/shared/Infrastructure/CommandDispatcher.cs` — silent-режим (рекомендуется)
+Чтобы write-команды (`clone_recode`, `execute_plan`, `batch_*`) не упирались в интерактивные
+диалоги Inventor («найти/открыть ссылку»), в `Dispatch(...)` для НЕ read-only команд включайте
+`Application.SilentOperation = true` на время выполнения и восстанавливайте после. Делается через
+reflection по `ctx.Application`, чтобы файл остался API-free (компилируется без Inventor interop):
+```csharp
+// !cmd.IsReadOnly: prev = SilentOperation; SilentOperation = true;
+var app = ctx.Application;
+var silentProp = (!cmd.IsReadOnly && app != null) ? app.GetType().GetProperty("SilentOperation") : null;
+object? prevSilent = null;
+if (silentProp is { CanRead: true, CanWrite: true }) { prevSilent = silentProp.GetValue(app); silentProp.SetValue(app, true); }
+try { /* ... cmd.Execute(...) ... */ }
+finally { if (silentProp != null && app != null) silentProp.SetValue(app, prevSilent); }
+```
+> ⚠️ Silent-режим подавляет диалоги, но НЕ заменяет корректное разрешение ссылок. Для реальной
+> автономной работы нужен активный проект Inventor (`.ipj`) с правильными Workspace/Library-путями —
+> иначе ссылки у изделий, выдернутых из архива, не резолвятся, и Pack-and-Go/open будут неполными.
+
 ## 3. Собрать и проверить (Inventor 2026 → .NET 8)
 Не собирайте всё решение `IptMcp.sln` целиком — в нём есть `plugin-inv27` на .NET 10.
 На машине с одним .NET 8 SDK стройте только нужное:
