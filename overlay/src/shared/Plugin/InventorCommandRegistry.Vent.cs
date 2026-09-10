@@ -21,6 +21,7 @@ public static partial class InventorCommandRegistry
         add(new MakeDrawingHandler());
         add(new BatchFlatDxfHandler());
         add(new BomReportHandler());
+        add(new InspectModelHandler());
     }
 }
 #endif

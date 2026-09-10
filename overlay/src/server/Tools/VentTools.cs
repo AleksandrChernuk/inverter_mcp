@@ -215,6 +215,13 @@ public sealed class VentTools
     public Task<string> BomReport(CancellationToken ct = default)
         => Call("vent_bom_report", new JObject(), ct);
 
+    [McpServerTool(Name = "inventor_vent_inspect_model"),
+     Description("Inspect the ACTIVE part's build tree: features, sketches and every sketch dimension " +
+                 "(name, expression, kind=radius/diameter/linear/angle). Use it to find size drivers that " +
+                 "are NOT top-level parameters (e.g. a blade-slot placement radius) before changing them. Read-only.")]
+    public Task<string> InspectModel(CancellationToken ct = default)
+        => Call("vent_inspect_model", new JObject(), ct);
+
     // ---- helper (mirrors ExportTools.Call) ----
     private async Task<string> Call(string command, JObject p, CancellationToken ct)
     {
