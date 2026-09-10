@@ -222,6 +222,16 @@ public sealed class VentTools
     public Task<string> InspectModel(CancellationToken ct = default)
         => Call("vent_inspect_model", new JObject(), ct);
 
+    [McpServerTool(Name = "inventor_vent_drive_dimension"),
+     Description("Set a part parameter / named sketch dimension by name and value (e.g. name=\"d0\", " +
+                 "value=\"340 mm\"), rebuild the active part, and report the new bounding box and mass — for " +
+                 "parametric studies. Change is NOT saved to disk (use inventor_save_document to keep it).")]
+    public Task<string> DriveDimension(
+        string name,
+        [Description("New expression, e.g. \"340 mm\" or a numeric expression.")] string value,
+        CancellationToken ct = default)
+        => Call("vent_drive_dimension", new JObject { ["name"] = name, ["value"] = value }, ct);
+
     // ---- helper (mirrors ExportTools.Call) ----
     private async Task<string> Call(string command, JObject p, CancellationToken ct)
     {

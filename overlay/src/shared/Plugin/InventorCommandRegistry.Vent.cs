@@ -22,6 +22,7 @@ public static partial class InventorCommandRegistry
         add(new BatchFlatDxfHandler());
         add(new BomReportHandler());
         add(new InspectModelHandler());
+        add(new DriveDimensionHandler());
     }
 }
 #endif
