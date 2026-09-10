@@ -1,4 +1,4 @@
-#if INVENTOR2022 || INVENTOR2023 || INVENTOR2024 || INVENTOR2025 || INVENTOR2026 || INVENTOR2027
+#if INVENTOR2021 || INVENTOR2022 || INVENTOR2023 || INVENTOR2024 || INVENTOR2025 || INVENTOR2026 || INVENTOR2027
 using System;
 using System.Collections.Generic;
 using Bimwright.Ipt.Shared.Contracts;
@@ -83,7 +83,7 @@ public sealed class ExecutePlanHandler : HandlerBase, IInventorCommand
 
         try
         {
-            transaction = app.TransactionManager.StartTransaction(doc,
+            transaction = app.TransactionManager.StartTransaction((global::Inventor._Document)doc,
                 mutations.Count == 0 ? "KVZ independent validation" : "KVZ autonomous engineering plan");
 
             for (int i = 0; i < mutations.Count; i++)
@@ -367,8 +367,8 @@ public sealed class ExecutePlanHandler : HandlerBase, IInventorCommand
                 {
                     try
                     {
-                        string current = part.ActiveMaterial?.InternalName ?? "";
-                        string expected = state.ActiveMaterial.InternalName;
+                        string current = part.ActiveMaterial?.Name ?? "";
+                        string expected = state.ActiveMaterial.Name;
                         if (!string.Equals(current, expected, StringComparison.OrdinalIgnoreCase))
                         {
                             part.ActiveMaterial = state.ActiveMaterial;
@@ -439,7 +439,7 @@ public sealed class ExecutePlanHandler : HandlerBase, IInventorCommand
                     return document.FullDocumentName;
             }
             catch { }
-            try { return document.InternalName; }
+            try { return document.DisplayName; }
             catch { return document.DisplayName; }
         }
     }
@@ -592,8 +592,8 @@ public sealed class ExecutePlanHandler : HandlerBase, IInventorCommand
     {
         ComponentDefinition? definition = doc switch
         {
-            PartDocument part => part.ComponentDefinition,
-            AssemblyDocument assembly => assembly.ComponentDefinition,
+            PartDocument part => (global::Inventor.ComponentDefinition)part.ComponentDefinition,
+            AssemblyDocument assembly => (global::Inventor.ComponentDefinition)assembly.ComponentDefinition,
             _ => null,
         };
         if (definition is null)

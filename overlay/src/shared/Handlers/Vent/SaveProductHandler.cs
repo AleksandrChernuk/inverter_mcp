@@ -1,4 +1,4 @@
-#if INVENTOR2022 || INVENTOR2023 || INVENTOR2024 || INVENTOR2025 || INVENTOR2026 || INVENTOR2027
+#if INVENTOR2021 || INVENTOR2022 || INVENTOR2023 || INVENTOR2024 || INVENTOR2025 || INVENTOR2026 || INVENTOR2027
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,6 +6,8 @@ using Bimwright.Ipt.Shared.Contracts;
 using Bimwright.Ipt.Shared.Infrastructure;
 using Newtonsoft.Json.Linq;
 using Inventor;
+using Path = System.IO.Path;
+using File = System.IO.File;
 
 namespace Bimwright.Ipt.Shared.Handlers.Vent;
 

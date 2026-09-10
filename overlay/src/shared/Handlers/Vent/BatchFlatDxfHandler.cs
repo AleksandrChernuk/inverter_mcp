@@ -1,4 +1,4 @@
-#if INVENTOR2022 || INVENTOR2023 || INVENTOR2024 || INVENTOR2025 || INVENTOR2026 || INVENTOR2027
+#if INVENTOR2021 || INVENTOR2022 || INVENTOR2023 || INVENTOR2024 || INVENTOR2025 || INVENTOR2026 || INVENTOR2027
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -8,6 +8,8 @@ using Bimwright.Ipt.Shared.Contracts;
 using Bimwright.Ipt.Shared.Infrastructure;
 using Newtonsoft.Json.Linq;
 using Inventor;
+using Path = System.IO.Path;
+using File = System.IO.File;
 
 namespace Bimwright.Ipt.Shared.Handlers.Vent;
 
@@ -74,13 +76,13 @@ public sealed class BatchFlatDxfHandler : HandlerBase, IInventorCommand
                 if (!sm.HasFlatPattern)
                     throw new InvalidOperationException("flat pattern creation did not succeed");
 
-                string designation = ReadIProperty(part, "Design Tracking Properties", "Part Number");
+                string designation = ReadIProperty((global::Inventor.Document)part, "Design Tracking Properties", "Part Number");
                 if (string.IsNullOrWhiteSpace(designation)) designation = label;
-                string description = ReadIProperty(part, "Design Tracking Properties", "Description");
+                string description = ReadIProperty((global::Inventor.Document)part, "Design Tracking Properties", "Description");
                 string rawMaterial = "";
                 try { rawMaterial = part.ComponentDefinition.Material.Name; } catch { }
                 string material = materialAliases.Value<string>(rawMaterial) ?? rawMaterial;
-                double thicknessMm = sm.Thickness.Value * 10.0;
+                double thicknessMm = (double)sm.Thickness.Value * 10.0;
                 string exportName = string.Join(" ", new[]
                 {
                     thicknessMm.ToString("0.###", CultureInfo.InvariantCulture) + "мм",

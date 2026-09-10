@@ -1,4 +1,4 @@
-#if INVENTOR2022 || INVENTOR2023 || INVENTOR2024 || INVENTOR2025 || INVENTOR2026 || INVENTOR2027
+#if INVENTOR2021 || INVENTOR2022 || INVENTOR2023 || INVENTOR2024 || INVENTOR2025 || INVENTOR2026 || INVENTOR2027
 using System;
 using System.Collections.Generic;
 using Bimwright.Ipt.Shared.Contracts;
@@ -65,7 +65,7 @@ public sealed class BomReportHandler : HandlerBase, IInventorCommand
                     byKey[key] = new JObject
                     {
                         ["part"] = part.DisplayName,
-                        ["material"] = VentSupport.MaterialName(part),
+                        ["material"] = VentSupport.MaterialName((global::Inventor.Document)part),
                         ["thickness_mm"] = thick,
                         ["flat_width_mm"] = fw,
                         ["flat_height_mm"] = fh,

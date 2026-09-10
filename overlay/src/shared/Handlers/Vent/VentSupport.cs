@@ -1,4 +1,4 @@
-#if INVENTOR2022 || INVENTOR2023 || INVENTOR2024 || INVENTOR2025 || INVENTOR2026 || INVENTOR2027
+#if INVENTOR2021 || INVENTOR2022 || INVENTOR2023 || INVENTOR2024 || INVENTOR2025 || INVENTOR2026 || INVENTOR2027
 using System;
 using Newtonsoft.Json.Linq;
 using Inventor;
@@ -53,7 +53,7 @@ internal static class VentSupport
     }
 
     /// <summary>Read a document's material name (iProperty "Material"), or null.</summary>
-    public static string? MaterialName(Document doc)
+    public static string? MaterialName(global::Inventor.Document doc)
     {
         try
         {
@@ -70,7 +70,7 @@ internal static class VentSupport
         {
             if (doc.ComponentDefinition is SheetMetalComponentDefinition sm)
             {
-                double cm = sm.Thickness.Value; // cm
+                double cm = (double)sm.Thickness.Value; // cm
                 return Math.Round(cm * CmToMm, 3);
             }
         }

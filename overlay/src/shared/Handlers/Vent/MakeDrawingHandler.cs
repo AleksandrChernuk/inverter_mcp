@@ -1,4 +1,4 @@
-#if INVENTOR2022 || INVENTOR2023 || INVENTOR2024 || INVENTOR2025 || INVENTOR2026 || INVENTOR2027
+#if INVENTOR2021 || INVENTOR2022 || INVENTOR2023 || INVENTOR2024 || INVENTOR2025 || INVENTOR2026 || INVENTOR2027
 using System;
 using System.Linq;
 using Bimwright.Ipt.Shared.Contracts;
@@ -196,7 +196,7 @@ public sealed class MakeDrawingHandler : HandlerBase, IInventorCommand
 
             if (notes.Length > 0)
             {
-                string noteText = string.Join(Environment.NewLine, notes.Select((text, index) => $"{index + 1}. {text}"));
+                string noteText = string.Join(System.Environment.NewLine, notes.Select((text, index) => $"{index + 1}. {text}"));
                 sheet.DrawingNotes.GeneralNotes.AddFitted(
                     tg.CreatePoint2d(sheet.Width * 0.56, sheet.Height * 0.10), noteText);
             }
@@ -338,7 +338,7 @@ public sealed class MakeDrawingHandler : HandlerBase, IInventorCommand
         if (right.Point.X - left.Point.X > 0.0001)
         {
             general.AddLinear(
-                tg.CreatePoint2d((left.Point.X + right.Point.X) / 2.0, view.Bottom - 1.5),
+                tg.CreatePoint2d((left.Point.X + right.Point.X) / 2.0, (view.Position.Y - view.Height / 2.0) - 1.5),
                 sheet.CreateGeometryIntent(left.Curve, left.Intent),
                 sheet.CreateGeometryIntent(right.Curve, right.Intent),
                 DimensionTypeEnum.kHorizontalDimensionType);

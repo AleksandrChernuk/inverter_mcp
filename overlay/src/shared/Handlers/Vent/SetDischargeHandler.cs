@@ -1,4 +1,4 @@
-#if INVENTOR2022 || INVENTOR2023 || INVENTOR2024 || INVENTOR2025 || INVENTOR2026 || INVENTOR2027
+#if INVENTOR2021 || INVENTOR2022 || INVENTOR2023 || INVENTOR2024 || INVENTOR2025 || INVENTOR2026 || INVENTOR2027
 using System;
 using Bimwright.Ipt.Shared.Contracts;
 using Bimwright.Ipt.Shared.Infrastructure;
@@ -74,7 +74,7 @@ public sealed class SetDischargeHandler : HandlerBase, IInventorCommand
         {
             ["parameter"] = prm.Name,
             ["angle_deg"] = angle,
-            ["bounding_box_mm"] = VentSupport.BBoxMm(doc.ComponentDefinition),
+            ["bounding_box_mm"] = VentSupport.BBoxMm((global::Inventor.ComponentDefinition)doc.ComponentDefinition),
         });
     }
 

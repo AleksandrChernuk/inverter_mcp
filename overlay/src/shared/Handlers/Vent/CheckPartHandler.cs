@@ -1,4 +1,4 @@
-#if INVENTOR2022 || INVENTOR2023 || INVENTOR2024 || INVENTOR2025 || INVENTOR2026 || INVENTOR2027
+#if INVENTOR2021 || INVENTOR2022 || INVENTOR2023 || INVENTOR2024 || INVENTOR2025 || INVENTOR2026 || INVENTOR2027
 using System;
 using System.Collections.Generic;
 using Bimwright.Ipt.Shared.Contracts;
@@ -68,7 +68,7 @@ public sealed class CheckPartHandler : HandlerBase, IInventorCommand
         return Ok(ctx, new JObject
         {
             ["part"] = doc.DisplayName,
-            ["material"] = VentSupport.MaterialName(doc),
+            ["material"] = VentSupport.MaterialName((global::Inventor.Document)doc),
             ["thickness_mm"] = thick,
             ["flat_width_mm"] = flatW,
             ["flat_height_mm"] = flatH,

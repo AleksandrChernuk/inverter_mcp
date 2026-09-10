@@ -1,4 +1,4 @@
-#if INVENTOR2022 || INVENTOR2023 || INVENTOR2024 || INVENTOR2025 || INVENTOR2026 || INVENTOR2027
+#if INVENTOR2021 || INVENTOR2022 || INVENTOR2023 || INVENTOR2024 || INVENTOR2025 || INVENTOR2026 || INVENTOR2027
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -76,7 +76,7 @@ public sealed class CheckMountingPatternHandler : HandlerBase, IInventorCommand
             foreach (HoleFeature feature in part.ComponentDefinition.Features.HoleFeatures)
             {
                 double? diameter = null;
-                try { diameter = feature.HoleDiameter.Value * CmToMm; } catch { }
+                try { diameter = (double)feature.HoleDiameter.Value * CmToMm; } catch { }
                 foreach (Point rawPoint in feature.HoleCenterPoints)
                 {
                     Point point = app.TransientGeometry.CreatePoint(rawPoint.X, rawPoint.Y, rawPoint.Z);

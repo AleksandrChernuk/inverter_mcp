@@ -1,4 +1,4 @@
-#if INVENTOR2022 || INVENTOR2023 || INVENTOR2024 || INVENTOR2025 || INVENTOR2026 || INVENTOR2027
+#if INVENTOR2021 || INVENTOR2022 || INVENTOR2023 || INVENTOR2024 || INVENTOR2025 || INVENTOR2026 || INVENTOR2027
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,6 +7,8 @@ using Bimwright.Ipt.Shared.Contracts;
 using Bimwright.Ipt.Shared.Infrastructure;
 using Newtonsoft.Json.Linq;
 using Inventor;
+using Path = System.IO.Path;
+using File = System.IO.File;
 
 namespace Bimwright.Ipt.Shared.Handlers.Vent;
 
@@ -374,8 +376,8 @@ public sealed class CloneRecodeProductHandler : HandlerBase, IInventorCommand
     {
         try
         {
-            if (descriptor.ReferencedFile.AvailableDocuments.Count > 0)
-                return descriptor.ReferencedFile.AvailableDocuments[1];
+            foreach (var d in (System.Collections.IEnumerable)descriptor.ReferencedFile.AvailableDocuments)
+                return d as global::Inventor.Document;
         }
         catch { }
         return null;
