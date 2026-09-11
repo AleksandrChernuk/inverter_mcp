@@ -37,6 +37,20 @@ public sealed class DriveDimensionHandler : HandlerBase, IInventorCommand
         if (string.IsNullOrWhiteSpace(value))
             return Fail(ctx, InventorErrorCodes.INVALID_ARGUMENT, "value is required (e.g. '340 mm')");
 
+        // Guardrail (copy-before-resize): refuse to change a size on a part that lives in a
+        // protected/possibly-shared location (the master catalog) — editing a shared/library part
+        // would change it in EVERY product that references it. Only parts in a writable copy area
+        // (user profile / temp / export root) may be resized. Override with allow_in_place=true.
+        if (!(p.Value<bool?>("allow_in_place") ?? false))
+        {
+            string partPath = ""; try { partPath = doc.FullFileName; } catch { }
+            if (!string.IsNullOrWhiteSpace(partPath) && ExportPathPolicy.TryRejectPath(partPath, out _))
+                return Fail(ctx, InventorErrorCodes.INVALID_ARGUMENT,
+                    "деталь в защищённом/возможно общем расположении (мастер-каталог): изменение размера здесь поменяло бы её во ВСЕХ изделиях. " +
+                    "Сначала склонируйте изделие (vent_new_product / vent_clone_recode_product) и меняйте копию, " +
+                    "либо передайте allow_in_place=true, если деталь уникальна для одного изделия.");
+        }
+
         var def = doc.ComponentDefinition;
 
         Parameter? prm = null;

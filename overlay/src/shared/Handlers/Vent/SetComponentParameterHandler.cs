@@ -53,6 +53,19 @@ public sealed class SetComponentParameterHandler : HandlerBase, IInventorCommand
         try { compDef = occ.Definition; }
         catch (Exception ex) { return Fail(ctx, InventorErrorCodes.API_ERROR, $"cannot access component definition: {ex.Message}"); }
 
+        // Guardrail (copy-before-resize): refuse to change a component whose part file is in a
+        // protected/possibly-shared location (master catalog). A shared/library part would change in
+        // EVERY product that uses it. Only parts in a writable copy area may be edited. Override with allow_in_place=true.
+        if (!(p.Value<bool?>("allow_in_place") ?? false))
+        {
+            string partPath = ""; try { partPath = ((global::Inventor.Document)compDef.Document).FullFileName; } catch { }
+            if (!string.IsNullOrWhiteSpace(partPath) && ExportPathPolicy.TryRejectPath(partPath, out _))
+                return Fail(ctx, InventorErrorCodes.INVALID_ARGUMENT,
+                    $"компонент '{occName}' — в защищённом/возможно общем расположении (мастер-каталог): изменение поменяло бы деталь во ВСЕХ изделиях. " +
+                    "Сначала склонируйте изделие (vent_new_product / vent_clone_recode_product) и меняйте копию, " +
+                    "либо allow_in_place=true, если деталь продукт-уникальна.");
+        }
+
         // the base ComponentDefinition interface has no .Parameters — resolve the concrete type
         global::Inventor.Parameters? prms = null;
         var pcd = compDef as PartComponentDefinition;

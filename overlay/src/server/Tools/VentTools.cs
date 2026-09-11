@@ -394,8 +394,13 @@ public sealed class VentTools
     public Task<string> DriveDimension(
         string name,
         [Description("New expression, e.g. \"340 mm\" or a numeric expression.")] string value,
+        [Description("Allow editing a part that lives in a protected/master location in place. Default false " +
+                     "(safe): parts in the master catalog are refused because a shared/library part would change " +
+                     "in every product — clone the product first and resize the copy. Set true only for a product-unique part.")]
+        bool allowInPlace = false,
         CancellationToken ct = default)
-        => Call("vent_drive_dimension", new JObject { ["name"] = name, ["value"] = value }, ct);
+        => Call("vent_drive_dimension",
+                new JObject { ["name"] = name, ["value"] = value, ["allow_in_place"] = allowInPlace }, ct);
 
     [McpServerTool(Name = "inventor_vent_set_component_parameter"),
      Description("Assembly editor: in the ACTIVE assembly, set a parameter of a named component (occurrence, " +
@@ -406,9 +411,13 @@ public sealed class VentTools
         [Description("Component/occurrence name, e.g. from inventor_get_assembly_bom.")] string occurrence,
         string name,
         [Description("New expression, e.g. \"340 mm\".")] string value,
+        [Description("Allow editing a component whose part is in a protected/master location in place. Default " +
+                     "false (safe): master-catalog parts are refused because a shared/library part would change in " +
+                     "every product — clone the product first and edit the copy. Set true only for a product-unique part.")]
+        bool allowInPlace = false,
         CancellationToken ct = default)
         => Call("vent_set_component_parameter",
-                new JObject { ["occurrence"] = occurrence, ["name"] = name, ["value"] = value }, ct);
+                new JObject { ["occurrence"] = occurrence, ["name"] = name, ["value"] = value, ["allow_in_place"] = allowInPlace }, ct);
 
     [McpServerTool(Name = "inventor_vent_set_constraint"),
      Description("Assembly editor (constraints): in the ACTIVE assembly, change a named constraint's driving " +
