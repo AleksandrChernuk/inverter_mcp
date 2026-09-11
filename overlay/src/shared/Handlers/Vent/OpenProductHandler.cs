@@ -25,6 +25,27 @@ public sealed class OpenProductHandler : HandlerBase, IInventorCommand
         if (!System.IO.File.Exists(path))
             return Fail(ctx, InventorErrorCodes.INVALID_ARGUMENT, "file does not exist: " + path);
 
+        // Auto-activate the product's .ipj BEFORE opening, so library references (ступиці,
+        // покупні, материалы) resolve and Inventor does not prompt to locate/open files.
+        // Inventor cannot switch the active project while documents are open, so this only
+        // runs when nothing is open; otherwise we leave the current project untouched.
+        string? projectNote = null;
+        try
+        {
+            if (app.Documents.Count == 0)
+            {
+                string? ipj = VentSupport.FindProjectFile(path);
+                if (!string.IsNullOrWhiteSpace(ipj))
+                {
+                    var (changed, _, err) = VentSupport.ActivateProject(app, ipj!);
+                    projectNote = err != null
+                        ? "проект не активирован: " + err
+                        : (changed ? "активирован проект: " + ipj : null);
+                }
+            }
+        }
+        catch { /* best-effort; opening still proceeds */ }
+
         try
         {
             global::Inventor.Document doc = app.Documents.Open(path, true);
@@ -33,6 +54,7 @@ public sealed class OpenProductHandler : HandlerBase, IInventorCommand
                 ["title"] = doc.DisplayName,
                 ["document_type"] = doc.DocumentType.ToString(),
                 ["path"] = TryFullName(doc) ?? path,
+                ["project"] = projectNote,
             });
         }
         catch (Exception ex)

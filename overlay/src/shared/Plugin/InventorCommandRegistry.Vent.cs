@@ -1,4 +1,4 @@
-#if INVENTOR2022 || INVENTOR2023 || INVENTOR2024 || INVENTOR2025 || INVENTOR2026 || INVENTOR2027
+#if INVENTOR2021 || INVENTOR2022 || INVENTOR2023 || INVENTOR2024 || INVENTOR2025 || INVENTOR2026 || INVENTOR2027
 namespace Bimwright.Ipt.Shared.Plugin;
 
 using System;
@@ -14,6 +14,7 @@ public static partial class InventorCommandRegistry
 {
     static partial void AddVent(Dictionary<string, IInventorCommand> d, Action<IInventorCommand> add)
     {
+        add(new ActivateProjectHandler());
         add(new OpenProductHandler());
         add(new CloneRecodeProductHandler());
         add(new SavePartAsHandler());

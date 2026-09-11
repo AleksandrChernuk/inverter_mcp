@@ -244,10 +244,23 @@ public sealed class VentTools
     public Task<string> SaveProduct(string productRoot, CancellationToken ct = default)
         => Call("vent_save_product", new JObject { ["product_root"] = productRoot }, ct);
 
+    [McpServerTool(Name = "inventor_vent_activate_project"),
+     Description("Activate a product's Inventor project (.ipj) as the active design project so its Workspace " +
+                 "+ Library paths resolve references (ступиці, покупні, материалы) and Inventor stops prompting " +
+                 "to locate/open files. Pass a .ipj path, a product folder, or any file inside the product " +
+                 "(the nearest .ipj at or above it is used). Inventor cannot switch the active project while " +
+                 "documents are open, so call this with NOTHING open (vent_open_product also auto-activates the " +
+                 ".ipj when nothing is open). Returns the active project path and whether it changed.")]
+    public Task<string> ActivateProject(
+        [Description(".ipj path, product folder, or a file inside the product.")] string path,
+        CancellationToken ct = default)
+        => Call("vent_activate_project", new JObject { ["path"] = path }, ct);
+
     [McpServerTool(Name = "inventor_vent_open_product"),
      Description("Open a product's top assembly (.iam) or a specific part (.ipt) in Inventor by absolute " +
                  "path (get paths from inventor_vent_list_products). Makes it the active document so the " +
-                 "other vent tools operate on it.")]
+                 "other vent tools operate on it. If nothing is open, the product's .ipj is auto-activated " +
+                 "first so library references resolve without prompts.")]
     public Task<string> OpenProduct(string path, CancellationToken ct = default)
         => Call("vent_open_product", new JObject { ["path"] = path }, ct);
 
