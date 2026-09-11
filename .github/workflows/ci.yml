@@ -27,8 +27,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - name: Enable pnpm
-        run: corepack enable
+      - name: Install pnpm
+        # Install the pinned pnpm directly (NOT via corepack): the runner's bundled
+        # corepack now ships pnpm 12.x, which refuses to switch to the packageManager-
+        # pinned 8.10.0 under corepack (ERR_PNPM_BAD_PM_VERSION). A direct global install
+        # matches the packageManager field and honours --frozen-lockfile.
+        run: npm install -g pnpm@8.10.0
       - name: Install connector dependencies
         run: pnpm --dir phase2/connectors-inventor install --frozen-lockfile
       - name: Test connector
