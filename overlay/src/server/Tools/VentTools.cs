@@ -393,6 +393,15 @@ public sealed class VentTools
     public Task<string> BomReport(CancellationToken ct = default)
         => Call("vent_bom_report", new JObject(), ct);
 
+    [McpServerTool(Name = "inventor_vent_inspect_parametrization"),
+     Description("Read-only recon of the ACTIVE part/assembly's parametrization: whether it is an " +
+                 "iPart/iAssembly factory or member (with table columns, key columns and member count), the " +
+                 "iLogic rules present (names), and the user parameters (name+expression). Use it FIRST to " +
+                 "decide how to drive a size variant (типорозмір): by an iLogic key parameter, by selecting an " +
+                 "iPart/iAssembly row, or that the part is not parametrized yet. Works on Inventor 2021+.")]
+    public Task<string> InspectParametrization(CancellationToken ct = default)
+        => Call("vent_inspect_parametrization", new JObject(), ct);
+
     [McpServerTool(Name = "inventor_vent_inspect_model"),
      Description("Inspect the ACTIVE part's build tree: features, sketches and every sketch dimension " +
                  "(name, expression, kind=radius/diameter/linear/angle). Use it to find size drivers that " +
