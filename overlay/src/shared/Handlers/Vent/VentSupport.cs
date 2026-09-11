@@ -1,5 +1,6 @@
 #if INVENTOR2021 || INVENTOR2022 || INVENTOR2023 || INVENTOR2024 || INVENTOR2025 || INVENTOR2026 || INVENTOR2027
 using System;
+using System.Reflection;
 using Newtonsoft.Json.Linq;
 using Inventor;
 
@@ -153,6 +154,27 @@ internal static class VentSupport
         {
             return (false, ActiveProjectPath(app), ex.Message);
         }
+    }
+
+    // ---- iLogic access (late-bound; the iLogic assembly is not referenced) ----
+
+    /// <summary>iLogic add-in ClientId (stable across Inventor versions).</summary>
+    public const string ILogicAddInGuid = "{3BDD8D79-2179-4B11-8A5A-257B1C0263AC}";
+
+    /// <summary>
+    /// Return the iLogic Automation object (late-bound), or null if the iLogic add-in is not loaded.
+    /// Call members via reflection: <c>Rules(doc)</c>, <c>RunRule(doc, name)</c>, <c>RunExternalRule(doc, name)</c>.
+    /// </summary>
+    public static object? GetILogicAutomation(Application app)
+    {
+        try
+        {
+            object addins = app.ApplicationAddIns;
+            object ilogic = addins.GetType().InvokeMember(
+                "ItemById", BindingFlags.InvokeMethod, null, addins, new object[] { ILogicAddInGuid })!;
+            return ilogic.GetType().InvokeMember("Automation", BindingFlags.GetProperty, null, ilogic, null);
+        }
+        catch { return null; }
     }
 }
 #endif

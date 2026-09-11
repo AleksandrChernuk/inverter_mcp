@@ -402,6 +402,31 @@ public sealed class VentTools
     public Task<string> InspectParametrization(CancellationToken ct = default)
         => Call("vent_inspect_parametrization", new JObject(), ct);
 
+    [McpServerTool(Name = "inventor_vent_run_ilogic"),
+     Description("Drive a size variant (типорозмір) via iLogic (method 2): optionally set a KEY parameter " +
+                 "(set_name + set_value) on the active part/assembly, then run an iLogic rule that computes the " +
+                 "dependent parameters, rebuild, and report the new bounding box (mm) and mass (g). Give 'rule' " +
+                 "(rule name from inventor_vent_inspect_parametrization) or run_all=true; external=true for an " +
+                 "external rule. Requires the iLogic add-in loaded. NOT saved to disk. Guarded by copy-before-resize: " +
+                 "master-catalog files are refused unless allow_in_place=true (clone the product first).")]
+    public Task<string> RunILogic(
+        [Description("iLogic rule name to run (from inventor_vent_inspect_parametrization). Omit to only set a key parameter or with run_all.")] string? rule = null,
+        [Description("Run every iLogic rule on the document, in order. Default false.")] bool runAll = false,
+        [Description("Key parameter to set before running (e.g. the типорозмір driver). Optional.")] string? setName = null,
+        [Description("Value/expression for set_name, e.g. \"400 mm\" or \"3.15\". Required if set_name is given.")] string? setValue = null,
+        [Description("Treat 'rule' as an external rule (RunExternalRule). Default false.")] bool external = false,
+        [Description("Allow running on a part/assembly in a protected/master location in place. Default false.")] bool allowInPlace = false,
+        CancellationToken ct = default)
+        => Call("vent_run_ilogic", new JObject
+        {
+            ["rule"] = rule,
+            ["run_all"] = runAll,
+            ["set_name"] = setName,
+            ["set_value"] = setValue,
+            ["external"] = external,
+            ["allow_in_place"] = allowInPlace,
+        }, ct);
+
     [McpServerTool(Name = "inventor_vent_inspect_model"),
      Description("Inspect the ACTIVE part's build tree: features, sketches and every sketch dimension " +
                  "(name, expression, kind=radius/diameter/linear/angle). Use it to find size drivers that " +

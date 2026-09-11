@@ -28,6 +28,7 @@ public static partial class InventorCommandRegistry
         add(new BomReportHandler());
         add(new InspectModelHandler());
         add(new InspectParametrizationHandler());
+        add(new RunILogicHandler());
         add(new DriveDimensionHandler());
         add(new SetComponentParameterHandler());
         add(new SetConstraintHandler());
