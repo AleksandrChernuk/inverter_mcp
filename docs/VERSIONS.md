@@ -12,7 +12,7 @@ Inventor, связь Named Pipe (2025–2027) / TCP (2022–2024), команд�
 | Зафиксированный commit | `d539a2ee7295747c7ef3b44a64aa870e8889deac` (2026-08-28) |
 | Лицензия базы | Apache-2.0 |
 | MCP SDK базы | `ModelContextProtocol` 1.1.0 |
-| Инструментов в базе | 58 (13 toolset'ов) + наш toolset `vent` (19) |
+| Инструментов в базе | 58 (13 toolset'ов) + наш toolset `vent` (22) |
 
 ## Совместимость Inventor / TFM
 | Год Inventor | TFM add-in | Транспорт |
@@ -31,9 +31,10 @@ Inventor, связь Named Pipe (2025–2027) / TCP (2022–2024), команд�
 | Платформа | Mac / Windows / Linux (Inventor не нужен) |
 | Формат входных DXF | AC1032 (AutoCAD 2018), единицы мм (INSUNITS=4) |
 
-## Наш toolset `vent` (v0.3.0)
-19 доменных тулзов: каталог/clone+recode/open/save-as/save-product, разворот, проверки/габаритка/DXF/PDF/BOM,
-inspect model/sketch, drive dimension/component/constraint и транзакционный `execute_plan`.
+## Наш toolset `vent` (v0.4.0)
+22 доменных тула: каталог/clone+recode/open/save-as/save-product, активация .ipj, разворот,
+проверки/габаритка/DXF/PDF/BOM, inspect model/sketch/parametrization, drive dimension/component/constraint,
+run iLogic и транзакционный `execute_plan`.
 Соответствие тул↔wire — `overlay/AGENTS.md`.
 
 ## Зафиксированные версии зависимостей (точные пины, без ^/>=)
@@ -50,6 +51,20 @@ inspect model/sketch, drive dimension/component/constraint и транзакци
 C#/Inventor-часть в CI не собирается (компилируется только в форке ipt-mcp на Windows).
 
 ## Changelog
+### v0.4.0 — 2026-09-11
+- `inventor_vent_activate_project` + авто-активация `.ipj` в `vent_open_product` (когда нет открытых
+  документов): Workspace + Library-пути (W:) резолвятся, Inventor не просит «найти/открыть».
+- Guardrail copy-before-resize на `drive_dimension` / `set_component_parameter` / `run_ilogic`:
+  отказ менять деталь в защищённом/мастер-расположении (`ExportPathPolicy`), override `allow_in_place`.
+- Silent-mode для write-операций (add-in подавляет диалоги на время не-read-only команд).
+- Параметризация (роадмап `docs/PARAMETRIZATION_PLAN.md`): Фаза 0 `inventor_vent_inspect_parametrization`
+  (разведка iPart/iAssembly, iLogic-правил, польз. параметров) + Фаза 1 `inventor_vent_run_ilogic`
+  (ключевой параметр → прогон правила → bbox/масса). iLogic — позднее связывание, без ссылки на сборку.
+- Находка: файлы `D:\Catalog` смешаны 2021/2026; ВКР 7,1 = 2026 (не откр. на 2021), ВЦ 4-75 3,15М и
+  Колесо 1в1 = 2021 (см. `docs/CATALOG_MAP.md`). Цель платформы — Inventor 2026 (plugin-inv26).
+- CI: pnpm ставится напрямую версией 8.10.0 (обход `ERR_PNPM_BAD_PM_VERSION` от corepack) — CI зелёный.
+- Собрано под plugin-inv21, plugin-inv26 и server (0 ошибок).
+
 ### v0.3.0 — 2026-09-10
 - Добавлен Product Job v2: versioned family recipe, детерминированные линейные формулы,
   до 512 типизированных шагов создания детали/сборки/метизов, formula-driven construction values,
@@ -135,6 +150,6 @@ C#/Inventor-часть в CI не собирается (компилируетс
   внешний Content Center, collision и `INCOMPLETE` recovery.
 - `MakeDrawingHandler`: заводской штамп, section/detail coordinates, Parts List/balloon/hole table styles.
 - Регрессионный цикл: `batch_flat_dxf` из .ipt → `dxf_tools/compare.py` с эталонными DXF каталога.
-- Поправить `RegistrationCountTests` базы под +19 тулзов `vent`.
+- Поправить `RegistrationCountTests` базы под +22 тулза `vent`.
 - `vent_execute_plan`: Windows smoke-test двойного rollback (Transaction + snapshot) для изменения параметра
   и материала вложенного occurrence в реальной `.iam`, включая проверку исходного dirty-state.

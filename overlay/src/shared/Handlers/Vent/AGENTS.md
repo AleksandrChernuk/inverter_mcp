@@ -18,7 +18,9 @@ public sealed class XxxHandler : HandlerBase, IInventorCommand {
 
 ## Файлы
 - `VentSupport.cs` — общие helpers: `BBoxMm`, `FindParameter`, `MaterialName`, `ThicknessMm`,
-  `DischargeParamCandidates` (кандидаты имени параметра разворота — правь под свои модели).
+  `DischargeParamCandidates` (кандидаты имени параметра разворота — правь под свои модели),
+  `FindProjectFile` / `ActiveProjectPath` / `ActivateProject` (активация .ipj),
+  `GetILogicAutomation` (поздн. связывание iLogic Automation, без ссылки на сборку iLogic).
 - `OpenProductHandler` / `SetDischargeHandler` / `CheckPartHandler` / `MakeDrawingHandler` /
 `BatchFlatDxfHandler` / `BomReportHandler`.
 
