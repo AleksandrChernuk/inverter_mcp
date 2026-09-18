@@ -43,7 +43,10 @@
 - [ ] Регрессия: `vent_batch_flat_dxf` из `.ipt` → `dxf_tools/compare.py` с эталонными DXF каталога.
 - [ ] Проверить `clone_recode_product` на копии реального ВКР: абсолютные/вложенные/чертёжные ссылки,
       восстановление исходных ссылок и отсутствие сохранения шаблона.
-- [ ] Поправить `RegistrationCountTests` базы под +19 тулзов `vent`.
+- [x] `RegistrationCountTests` базы сделан vent-независимым (фильтр `inventor_vent_*`); vent-поверхность
+      охраняется `VentToolSurfaceTests`. Правка задокументирована в `overlay/INTEGRATION.md`.
+- [x] Тесты vent-тулз (Inventor-free): `VentToolsWireTests` (25 wire-контрактов), `VentToolsServerTests`
+      (list/new_product по ФС), `VentToolSurfaceTests` (замороженные 27 имён). Прогон: 196/196 зелёные (`dotnet test`).
 
 ## ▶ Заводская калибровка (не заменяется интернетом)
 - [ ] Снять из утверждённых моделей/чертежей настоящие параметры и формулы ВКР, РК, рамы,

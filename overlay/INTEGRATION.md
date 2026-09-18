@@ -8,7 +8,12 @@
 overlay/src/server/Tools/VentTools.cs                     -> src/server/Tools/
 overlay/src/shared/Handlers/Vent/*.cs                     -> src/shared/Handlers/Vent/
 overlay/src/shared/Plugin/InventorCommandRegistry.Vent.cs -> src/shared/Plugin/
+overlay/tests/Bimwright.Ipt.Tests/*.cs                    -> tests/Bimwright.Ipt.Tests/
 ```
+
+Тесты `Vent*Tests.cs` — Inventor-free (создают `VentTools` напрямую, поднимают фейковый named-pipe
+плагин и/или работают с файловой системой), поэтому идут в `dotnet test` вместе с базовыми. Тест-проект
+собирает свою папку по умолчанию, отдельной правки csproj не нужно.
 
 `src/shared/**/*.cs` уже собирается плагином по глобу — новые хендлеры подхватятся автоматически.
 `VentTools.cs` лежит в `src/server/Tools/` — но серверный csproj включает файлы явно, поэтому
@@ -49,6 +54,17 @@ AddVent(d, Add);          // vent-factory toolset
 static partial void AddVent(Dictionary<string, IInventorCommand> d, Action<IInventorCommand> add);
 ```
 
+### `tests/Bimwright.Ipt.Tests/RegistrationCountTests.cs` — сделать vent-независимым
+Этот базовый guard замораживает поверхность **базы** (59/58 тулз). После включения `vent` реестр
+отдаёт 59+N тулз, и три счётных теста падают. Не меняйте число — сделайте счётчик vent-независимым,
+чтобы будущие vent-тулзы его не трогали (сама vent-поверхность охраняется `VentToolSurfaceTests`):
+добавьте хелпер и используйте его в трёх тестах (`All_toolsets…59`, `The_59_tools_match…`, `Default…58`):
+```csharp
+private static string[] BaseToolNames(InventorMcpConfig cfg)
+    => ToolNames(cfg).Where(n => !n.StartsWith("inventor_vent_", StringComparison.Ordinal)).ToArray();
+```
+Проверку на коллизии имён оставьте по ПОЛНОМУ набору (`ToolNames`), чтобы vent не конфликтовал с базой.
+
 ### `src/shared/Infrastructure/CommandDispatcher.cs` — silent-режим (рекомендуется)
 Чтобы write-команды (`clone_recode`, `execute_plan`, `batch_*`) не упирались в интерактивные
 диалоги Inventor («найти/открыть ссылку»), в `Dispatch(...)` для НЕ read-only команд включайте
@@ -75,9 +91,8 @@ dotnet build src/server/Bimwright.Ipt.Server.csproj -c Release
 dotnet build src/plugin-inv26/Bimwright.Ipt.Plugin.Inv26.csproj -c Release
 dotnet test  tests/Bimwright.Ipt.Tests/Bimwright.Ipt.Tests.csproj   # Inventor-free, должны быть зелёными
 ```
-`inventor_vent_*` появятся в `tools/list` (19 тулзов в текущем overlay; проверьте
-`RegistrationCountTests` — счётчик тулзов вырастет,
-поправьте ожидаемое число или исключите `vent` из этого теста).
+`inventor_vent_*` появятся в `tools/list` (27 тулзов в текущем overlay; `RegistrationCountTests`
+сделан vent-независимым — см. правку выше, отдельно число править не нужно).
 
 Для автономного smoke-test сначала вызовите `inventor_vent_execute_plan` с `dryRun=true`, затем на
 копии модели — с `dryRun=false`, заведомо failing `physical_bounds` и убедитесь, что ответ содержит
