@@ -1,9 +1,11 @@
 # План: параметризация типоразмеров в коннекторе (по порядку)
 
-> Статус: в работе. Целевая версия — Inventor 2026.
-> Реализовано в коде: **Фаза 0** (`vent_inspect_parametrization`), **Фаза 1** (`vent_run_ilogic`),
-> **Фаза 2** (`vent_select_ipart_member`). Осталось: **Фаза 3** (Make Components), **Фаза 4** (Excel).
-> Фазы 0–2 написаны, но приняты не на всех реальных изделиях — нужна Windows-приёмка на 2026.
+> Статус: все фазы 0–4 написаны в коде. Целевая версия — Inventor 2026.
+> Реализовано: **Фаза 0** `vent_inspect_parametrization`, **Фаза 1** `vent_run_ilogic`,
+> **Фаза 2** `vent_select_ipart_member`, **Фаза 3** `vent_make_components` (разведка+guarded execute),
+> **Фаза 4** `vent_import_params` (импорт таблицы параметров через `UserParameters.AddByExpression`).
+> ВАЖНО: код написан по паттерну, но НЕ собирался/не проверялся здесь — нужна Windows-приёмка на 2026
+> (особенно точные сигнатуры iPart `CreateMember`/`ChangeRow` и наличие headless-API у Make Components).
 
 ## Context (зачем)
 Заводской регламент КВЗ: типорозміри создают через ОДИН параметризованный мастер

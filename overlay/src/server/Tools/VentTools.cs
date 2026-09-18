@@ -449,6 +449,44 @@ public sealed class VentTools
             ["allow_in_place"] = allowInPlace,
         }, ct);
 
+    [McpServerTool(Name = "inventor_vent_make_components"),
+     Description("Multibody .ipt → .iam (method 3 build): explode a multibody part (one solid body per detail) " +
+                 "into an assembly with per-body parts. Primarily RECON: confirms the active part is multibody, " +
+                 "lists the solid bodies (future components) and readiness. With execute=true makes a guarded " +
+                 "best-effort attempt to run the Make Components command and reports exactly what happened — note " +
+                 "Make Components is an INTERACTIVE Inventor command with no guaranteed headless API, so the real " +
+                 "split is usually finished in the UI. Requires an active multibody part (.ipt) with ≥2 solids.")]
+    public Task<string> MakeComponents(
+        [Description("Attempt to actually run Make Components (default false = recon/dry-run only).")] bool execute = false,
+        [Description("Allow running for a part in a protected/master location. Default false.")] bool allowInPlace = false,
+        CancellationToken ct = default)
+        => Call("vent_make_components", new JObject
+        {
+            ["execute"] = execute,
+            ["allow_in_place"] = allowInPlace,
+        }, ct);
+
+    [McpServerTool(Name = "inventor_vent_import_params"),
+     Description("Excel/CSV parameter table → model user parameters (method 3): bring a shared parameter table " +
+                 "(same parameter names across a family) INTO the active part/assembly — update matching user " +
+                 "parameters or create them (UserParameters.AddByExpression). Source is an inline 'parameters' map " +
+                 "(name→expression) and/or a 'csv' file with columns name,expression[,units] (inline wins). units " +
+                 "like \"mm\", \"deg\", \"ul\" (default_units, default \"ul\"). Rebuilds and reports changed params " +
+                 "+ new bbox (mm) and mass (g). NOT saved to disk. Guarded by copy-before-resize.")]
+    public Task<string> ImportParams(
+        [Description("Inline parameter map name→expression, e.g. {\"D\":\"630 mm\",\"n\":\"12\"}. Optional.")] Dictionary<string, string>? parameters = null,
+        [Description("Absolute path to a CSV with columns name,expression[,units]. Optional.")] string? csv = null,
+        [Description("Units for rows without an explicit units column. Default \"ul\" (unitless).")] string? defaultUnits = null,
+        [Description("Allow editing a part/assembly in a protected/master location. Default false.")] bool allowInPlace = false,
+        CancellationToken ct = default)
+        => Call("vent_import_params", new JObject
+        {
+            ["parameters"] = parameters is null ? null : JObject.FromObject(parameters),
+            ["csv"] = csv,
+            ["default_units"] = defaultUnits,
+            ["allow_in_place"] = allowInPlace,
+        }, ct);
+
     [McpServerTool(Name = "inventor_vent_inspect_model"),
      Description("Inspect the ACTIVE part's build tree: features, sketches and every sketch dimension " +
                  "(name, expression, kind=radius/diameter/linear/angle). Use it to find size drivers that " +
