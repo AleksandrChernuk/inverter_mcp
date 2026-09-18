@@ -12,6 +12,10 @@
 - [x] Формульный `Product Job v2`: versioned family recipe, typed construction/assembly steps,
       создание детали/сборки, установка компонентов/метизов и digest двух уровней.
 - [x] Проверка разболтовки двигателя по реальным `HoleFeature.HoleCenterPoints`, BCD и угловому шагу.
+- [x] `vent_make_part_unique` — изоляция общей детали (лопатки из общей Библиотеки): копия внутрь папки
+      изделия + перепривязка ссылки (`ComponentOccurrence.Replace`), оригинал не трогается. Закрывает дыру
+      Pack-and-Go (он не копирует внешние/библиотечные ссылки). Приёмка на Windows/2026. Дальше по желанию:
+      авто-вызов перед правкой общей детали и опция «затягивать общие детали» в `clone_recode_product`.
 - [x] Параметризация типоразмеров (все фазы в коде): Фаза 0 `vent_inspect_parametrization`,
       Фаза 1 `vent_run_ilogic`, Фаза 2 `vent_select_ipart_member` (строка iPart/iAssembly),
       Фаза 3 `vent_make_components` (разведка многотелки + guarded execute), Фаза 4 `vent_import_params`

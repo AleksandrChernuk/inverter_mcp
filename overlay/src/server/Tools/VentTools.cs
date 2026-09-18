@@ -449,6 +449,32 @@ public sealed class VentTools
             ["allow_in_place"] = allowInPlace,
         }, ct);
 
+    [McpServerTool(Name = "inventor_vent_make_part_unique"),
+     Description("Localize a SHARED component so editing it can't break other products. A part living OUTSIDE " +
+                 "the product folder (e.g. a лопатка in a common Library/Content Center folder used by many " +
+                 "изделия) is COPIED into the current product's folder and the assembly reference is rebound to " +
+                 "that private copy (ComponentOccurrence.Replace); the original library file is never touched. " +
+                 "Run this BEFORE editing any shared blade — afterwards drive_dimension/scale/set_component_parameter " +
+                 "change only THIS product. Active document must be the product assembly (.iam); pass 'occurrence' " +
+                 "(from inventor_get_assembly_bom). NOT saved to disk — call vent_save_product to persist the rebind.")]
+    public Task<string> MakePartUnique(
+        [Description("Shared component/occurrence to localize, e.g. \"...Лопатка:1\" (from inventor_get_assembly_bom). The \":N\" suffix is optional.")] string occurrence,
+        [Description("Product folder to copy the part into. Optional; defaults to the active assembly's folder.")] string? productRoot = null,
+        [Description("Subfolder inside the product for localized parts, e.g. \"Библиотека\". Optional (default: product root).")] string? destSubdir = null,
+        [Description("New file name (without extension) for the local copy. Optional (default: original name).")] string? newName = null,
+        [Description("Rebind ALL instances of this part in the assembly to the local copy. Default true.")] bool allInstances = true,
+        [Description("Allow overwriting an existing target file. Default false.")] bool overwrite = false,
+        CancellationToken ct = default)
+        => Call("vent_make_part_unique", new JObject
+        {
+            ["occurrence"] = occurrence,
+            ["product_root"] = productRoot,
+            ["dest_subdir"] = destSubdir,
+            ["new_name"] = newName,
+            ["all_instances"] = allInstances,
+            ["overwrite"] = overwrite,
+        }, ct);
+
     [McpServerTool(Name = "inventor_vent_make_components"),
      Description("Multibody .ipt → .iam (method 3 build): explode a multibody part (one solid body per detail) " +
                  "into an assembly with per-body parts. Primarily RECON: confirms the active part is multibody, " +
