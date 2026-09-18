@@ -12,6 +12,9 @@
 - [x] Формульный `Product Job v2`: versioned family recipe, typed construction/assembly steps,
       создание детали/сборки, установка компонентов/метизов и digest двух уровней.
 - [x] Проверка разболтовки двигателя по реальным `HoleFeature.HoleCenterPoints`, BCD и угловому шагу.
+- [x] Параметризация типоразмеров: Фаза 0 `vent_inspect_parametrization`, Фаза 1 `vent_run_ilogic`,
+      Фаза 2 `vent_select_ipart_member` (выбор строки iPart/iAssembly). Осталось: Фаза 3 Make Components,
+      Фаза 4 Excel-параметры. Приёмка фаз 0–2 на реальных таблицах — на Windows/2026. См. `docs/PARAMETRIZATION_PLAN.md`.
 - [x] Чертёжный пакет: виды, retrieved dimensions, разрезы, выносные виды, Parts List, balloons,
       hole table, техтребования; пакетный PDF всех IDW/DWG.
 - [x] `dxf_tools/release.py`: глубокая DXF-проверка, коды/папки/PDF, CSV/XLSX, file manifest и release digest.

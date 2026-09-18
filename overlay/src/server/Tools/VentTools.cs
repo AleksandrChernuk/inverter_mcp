@@ -427,6 +427,28 @@ public sealed class VentTools
             ["allow_in_place"] = allowInPlace,
         }, ct);
 
+    [McpServerTool(Name = "inventor_vent_select_ipart_member"),
+     Description("Drive a size variant (типорозмір) via an iPart/iAssembly table (method 1): select a row of " +
+                 "the ACTIVE factory document by 'member' name, by 'keys' (key column -> value), or by 1-based " +
+                 "'row' index, and generate/activate that member. On a factory CreateMember spawns the concrete " +
+                 "member (типорозмір); on a member document it switches the row (ChangeRow). Returns the selected " +
+                 "row cells and the resulting bounding box (mm) + mass (g). Use inventor_vent_inspect_parametrization " +
+                 "FIRST to see the columns, key columns and member names. NOT saved to disk. Guarded by " +
+                 "copy-before-resize: master-catalog factories are refused unless allow_in_place=true.")]
+    public Task<string> SelectIPartMember(
+        [Description("Member name to select (from inventor_vent_inspect_parametrization). Optional.")] string? member = null,
+        [Description("1-based table row index to select. Optional.")] int? row = null,
+        [Description("Key column -> value map to find the row, e.g. {\"Розмір\":\"7,1\"}. Units/decimal comma tolerant. Optional.")] Dictionary<string, string>? keys = null,
+        [Description("Allow generating a member for a factory in a protected/master location. Default false.")] bool allowInPlace = false,
+        CancellationToken ct = default)
+        => Call("vent_select_ipart_member", new JObject
+        {
+            ["member"] = member,
+            ["row"] = row,
+            ["keys"] = keys is null ? null : JObject.FromObject(keys),
+            ["allow_in_place"] = allowInPlace,
+        }, ct);
+
     [McpServerTool(Name = "inventor_vent_inspect_model"),
      Description("Inspect the ACTIVE part's build tree: features, sketches and every sketch dimension " +
                  "(name, expression, kind=radius/diameter/linear/angle). Use it to find size drivers that " +
