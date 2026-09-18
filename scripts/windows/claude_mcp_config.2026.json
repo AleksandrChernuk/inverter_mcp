@@ -1,0 +1,20 @@
+{
+  "//": "Готовый MCP-конфиг для Claude Desktop под 2026-машину (D:\\Catalog, D:\\DXF_OUT). Скопируйте блок mcpServers в %APPDATA%\\Claude\\claude_desktop_config.json, ОБЪЕДИНИВ с существующим содержимым (не затирайте другие ключи). Затем полностью перезапустите Claude Desktop.",
+  "//command": "Путь command должен указывать на реально собранный exe. setup.ps1 в конце печатает его: <RepoDir>\\src\\server\\bin\\Release\\net8.0\\Bimwright.Ipt.Server.exe. По умолчанию RepoDir = <папка_репо>\\_forks\\ipt-mcp. Замените путь ниже на свой.",
+  "//readonly": "Под --read-only toolset vent вырезается целиком (он write-capable) — конструкторские vent-тулзы не появятся. Поэтому рабочий профиль идёт БЕЗ --read-only. Произвольный C# (send-code) НЕ включён.",
+  "//export": "Экспорт DXF/PDF жёстко ограничен BIMWRIGHT_INVENTOR_EXPORT_ROOT — коннектор физически не пишет никуда, кроме D:\\DXF_OUT.",
+  "//catalog": "VENT_CATALOG_ROOT — папка, где коннектор сканирует изделия (inventor_vent_list_products). Реальные папки изделий должны лежать именно здесь.",
+  "mcpServers": {
+    "vent-inventor": {
+      "command": "C:\\inverter_mcp\\_forks\\ipt-mcp\\src\\server\\bin\\Release\\net8.0\\Bimwright.Ipt.Server.exe",
+      "args": [
+        "--toolsets", "meta,query,document,parameters,feature,export,assembly,assembly_query,vent",
+        "--timeout-ms", "60000"
+      ],
+      "env": {
+        "VENT_CATALOG_ROOT": "D:\\Catalog",
+        "BIMWRIGHT_INVENTOR_EXPORT_ROOT": "D:\\DXF_OUT"
+      }
+    }
+  }
+}

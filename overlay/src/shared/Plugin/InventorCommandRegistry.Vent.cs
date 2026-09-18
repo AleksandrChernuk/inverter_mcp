@@ -30,6 +30,7 @@ public static partial class InventorCommandRegistry
         add(new InspectParametrizationHandler());
         add(new RunILogicHandler());
         add(new DriveDimensionHandler());
+        add(new ScalePartHandler());
         add(new SetComponentParameterHandler());
         add(new SetConstraintHandler());
         add(new SketchGeometryHandler());

@@ -449,6 +449,25 @@ public sealed class VentTools
         => Call("vent_drive_dimension",
                 new JObject { ["name"] = name, ["value"] = value, ["allow_in_place"] = allowInPlace }, ct);
 
+    [McpServerTool(Name = "inventor_vent_scale_part"),
+     Description("Uniformly scale the ACTIVE part by a factor (e.g. 1.2 = +20%): multiplies every INDEPENDENT " +
+                 "length dimension, leaving angles, counts, sheet-metal reference parameters and (by default) the " +
+                 "sheet thickness untouched; derived parameters follow automatically. Use to enlarge a whole part " +
+                 "PROPORTIONALLY so mating features stay aligned (e.g. blade seat vs disk slot) — unlike " +
+                 "drive_dimension which changes one dimension and can break the fit. allow_in_place is required for " +
+                 "master-catalog parts (clone the product first). Rebuilds and reports bbox+mass. NOT saved to disk.")]
+    public Task<string> ScalePart(
+        [Description("Scale factor, e.g. 1.2 for +20%, 0.95 for -5%.")] double factor,
+        [Description("Keep the sheet-metal thickness unscaled (default true).")] bool preserveThickness = true,
+        [Description("Allow scaling a part in a protected/master location (only if unique to one product).")] bool allowInPlace = false,
+        CancellationToken ct = default)
+        => Call("vent_scale_part", new JObject
+        {
+            ["factor"] = factor,
+            ["preserve_thickness"] = preserveThickness,
+            ["allow_in_place"] = allowInPlace,
+        }, ct);
+
     [McpServerTool(Name = "inventor_vent_set_component_parameter"),
      Description("Assembly editor: in the ACTIVE assembly, set a parameter of a named component (occurrence, " +
                  "e.g. \"КВЗ...Диск нижній:1\" from inventor_get_assembly_bom; the \":N\" suffix is optional) by " +
