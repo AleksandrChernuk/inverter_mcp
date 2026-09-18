@@ -6,6 +6,8 @@ using Bimwright.Ipt.Shared.Contracts;
 using Bimwright.Ipt.Shared.Infrastructure;
 using Newtonsoft.Json.Linq;
 using Inventor;
+// Disambiguate from Inventor.File which `using Inventor;` also imports.
+using File = System.IO.File;
 
 namespace Bimwright.Ipt.Shared.Handlers.Vent;
 
@@ -113,7 +115,7 @@ public sealed class ImportParamsHandler : HandlerBase, IInventorCommand
                 }
                 else
                 {
-                    Parameter np = ups.AddByExpression(name, expr, units);
+                    var np = ups.AddByExpression(name, expr, units);
                     changed.Add(new JObject { ["name"] = np.Name, ["new_expression"] = expr, ["units"] = units, ["action"] = "add" });
                 }
             }

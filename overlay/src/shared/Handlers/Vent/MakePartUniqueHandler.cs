@@ -6,6 +6,9 @@ using Bimwright.Ipt.Shared.Contracts;
 using Bimwright.Ipt.Shared.Infrastructure;
 using Newtonsoft.Json.Linq;
 using Inventor;
+// Disambiguate from Inventor.File / Inventor.Path which `using Inventor;` also imports.
+using File = System.IO.File;
+using Path = System.IO.Path;
 
 namespace Bimwright.Ipt.Shared.Handlers.Vent;
 
